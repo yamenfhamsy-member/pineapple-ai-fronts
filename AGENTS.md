@@ -4,9 +4,9 @@ Arabic RTL frontend for `free-ai-gateway`. Contract source of truth: `GATEWAY_AP
 
 ## Current state
 
-- Scaffold DONE (Astro 7 + TS strict + Tailwind 4, `package.json` + `package-lock.json`, `src/`, `dist/` builds green). No git repo yet — do not assume one exists.
-- Built: `theme.css` tokens, zero-JS hero, `src/api/client.ts+types.ts`, 5 islands (chat/models/ocr/tts/settings). Chromium desktop check passed 2026-10-11 (see Sessions).
-- Next: mobile-390 check (needs agent-browser `mobile` profile) → new GitHub repo from `fronts/` (`main`) → Pages → live matrix.
+- Scaffold DONE (Astro 7 + TS strict + Tailwind 4, `package.json` + `package-lock.json`, `src/`, `dist/` builds green). GitHub repo live: `yamenfhamsy-member/pineapple-ai-fronts` (`main`, commit `5e83224`).
+- Built: `theme.css` tokens, zero-JS hero, `src/api/client.ts+types.ts`, 5 islands (chat/models/ocr/tts/settings). Brand is Latin `Pineapple AI` (user decision 2026-10-11 — never transliterate to اناناس). Chromium desktop 1280 + Playwright mobile-390 checks passed 2026-10-11 (see Sessions). Local live matrix green except easemate 200-empty (known upstream flake).
+- Next: link repo in Cloudflare Pages dashboard (human step) → verify live matrix on `pages.dev`.
 
 ## Stack (decided, don't re-debate)
 
@@ -61,3 +61,4 @@ Arabic RTL frontend for `free-ai-gateway`. Contract source of truth: `GATEWAY_AP
 |---|---|---|
 | 2026-10-11 | skills (6) + brand assets + first AGENTS.md | scaffold (awaiting user approval) |
 | 2026-10-11 | build green (check 0 errs, JS 3.5KB gz) + desktop Chromium check (models=43 live, echo-200 freeai, all targets ≥44px after nav/clear-key fix) + lockfile | mobile-390 check → repo (`main`) → Pages → live matrix |
+| 2026-10-11 | brand→`Pineapple AI` Latin + mobile-390 Playwright pass (touch, no h-scroll, 43 live, select/checkbox 44px fix) + repo `pineapple-ai-fronts` pushed (`main`) + local matrix (5/6 echo-200, stream+`[DONE]`, WAV 352KB, 400/404, LH perf 96/LCP 0.9s; easemate 200-empty known flake) | Pages dashboard link (human) → verify on `pages.dev` |
