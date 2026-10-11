@@ -1,7 +1,7 @@
 // Chat island — vanilla TS, no framework. Always streams (SSE) with abort.
 // Error mapping: literal Arabic strings from types. 200-empty = retry hint (known flake).
 // 429 quota_exhausted = offer provider switch, not fatal.
-import { ERR_STRINGS, HISTORY_LIMIT, IDENTITY_PROMPT, type ChatMessage, type GatewayErrorShape } from "../api/types";
+import { ERR_STRINGS, HISTORY_LIMIT, IDENTITY_PROMPT, TOOL_PROMPT, type ChatMessage, type GatewayErrorShape } from "../api/types";
 import { chatStream, generateImage } from "../api/client";
 import { loadStoredModel } from "./models";
 import { loadSettings } from "./settings";
@@ -22,6 +22,20 @@ const imageMarker = (src: string): string => `![صورة مولّدة](${src})`;
 const parseImageMarker = (text: string): string | null => {
   const m = /^!\[.*\]\((https?:\/\/\S+|data:image\/\w+;base64,[A-Za-z0-9+/=]+)\)$/.exec(text.trim());
   return m?.[1] ?? null;
+};
+
+// Model-emitted tool call: [[tool:generate_image]]{"prompt": "..."}.
+// Tolerant: the call may sit inside surrounding chatter (models rarely obey
+// "only one line"), so search anywhere instead of anchoring the whole reply.
+const parseToolCall = (text: string): string | null => {
+  const m = /\[\[tool:generate_image\]\]\s*(\{.*?\})\s*/s.exec(text);
+  if (!m?.[1]) return null;
+  try {
+    const j = JSON.parse(m[1]) as { prompt?: unknown };
+    return typeof j.prompt === "string" && j.prompt.trim().length > 0 ? j.prompt.trim().slice(0, 500) : null;
+  } catch {
+    return null;
+  }
 };
 
 export function initChat(): void {
@@ -280,10 +294,10 @@ export function initChat(): void {
   // Image tool path: generate via the gateway horde provider, answer with the picture.
   // b64 is stored so saved chats keep working (R2 URLs expire after ~30 min).
   let cancelImage: (() => void) | null = null;
-  const runImage = (text: string): void => {
+  const runImage = (text: string, imagePrompt?: string, bubbled = false): void => {
     ctrl = new AbortController();
     setBusy(true);
-    bubble("user", text);
+    if (!bubbled) bubble("user", text);
     const box = imageBox(null);
     input.value = "";
     const signal = ctrl.signal;
@@ -295,7 +309,7 @@ export function initChat(): void {
       cancelImage = null;
       setBusy(false);
     };
-    void generateImage(text, "512x512", "b64_json", signal)
+    void generateImage(imagePrompt ?? text, "512x512", "b64_json", signal)
       .then(({ url, b64 }) => {
         if (settled) return;
         settled = true;
@@ -435,7 +449,7 @@ export function initChat(): void {
         provider: stored.provider,
         messages: [...history, { role: "user" as const, content: text }].slice(-HISTORY_LIMIT),
         temperature: settings.temperature,
-        system_prompt: [IDENTITY_PROMPT, settings.system_prompt].filter((s) => s.trim().length > 0).join("\n"),
+        system_prompt: [IDENTITY_PROMPT, TOOL_PROMPT, settings.system_prompt].filter((s) => s.trim().length > 0).join("\n"),
       };
       const done = (full: string): void => {
         setBusy(false);
@@ -444,6 +458,14 @@ export function initChat(): void {
           aiBox.remove();
           // Known upstream flake (easemate, deepseek-r1) — retry hint, never fatal.
           errLine(`${ERR_STRINGS.empty200} (إعادة المحاولة قد تنجح.)`, run);
+          return;
+        }
+        // The model decided to call the image tool — execute it, hide the raw call.
+        // (runImage records the user turn itself on success.)
+        const toolPrompt = parseToolCall(full);
+        if (toolPrompt) {
+          aiBox.remove();
+          runImage(text, toolPrompt, true);
           return;
         }
         history.push({ role: "user", content: text });
@@ -476,6 +498,12 @@ export function initChat(): void {
   // Sidebar extras: search saved chats + export the current one.
   document.getElementById("history-search")?.addEventListener("input", (ev) => {
     renderHistoryList((ev.target as HTMLInputElement).value);
+  });
+  // Image tool shortcut: primes the input with an image command and focuses it.
+  document.getElementById("tool-image")?.addEventListener("click", () => {
+    setSide(false);
+    input.value = "أنشئ صورة: ";
+    input.focus();
   });
   const exportMd = (): string =>
     `# Pineapple AI\n\n${history

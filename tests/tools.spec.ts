@@ -37,6 +37,16 @@ test("answer actions, export, and history search", async ({ page, context }) => 
   expect(await page.evaluate(() => (document.getElementById("chat-send") as HTMLButtonElement).disabled)).toBe(false);
 });
 
+test("image tool shortcut primes an image command", async ({ page }) => {
+  await gotoFresh(page, "/chat");
+  await page.locator("#menu-btn").click();
+  await page.locator("#tool-image").click();
+  expect(await page.evaluate(() => (document.getElementById("chat-input") as HTMLInputElement).value)).toBe(
+    "أنشئ صورة: ",
+  );
+  expect(await page.evaluate(() => document.getElementById("sidebar")!.classList.contains("open"))).toBe(false);
+});
+
 test("history search filters saved chats (seeded, no network)", async ({ page }) => {
   await gotoFresh(page, "/chat");
   await page.evaluate(() => {

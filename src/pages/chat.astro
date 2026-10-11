@@ -71,6 +71,8 @@ import Main from "../layouts/Main.astro";
         <button id="export-md" class="mini-btn" type="button">تصدير MD</button>
         <button id="export-copy" class="mini-btn" type="button">نسخ الكل</button>
       </div>
+      <h3>الأدوات</h3>
+      <button id="tool-image" class="menu-link" type="button">توليد صورة</button>
       <h3>النموذج</h3>
       <label for="model-select">اختر النموذج</label>
       <select id="model-select" aria-describedby="model-status"></select>
@@ -253,6 +255,15 @@ import Main from "../layouts/Main.astro";
     align-items: center;
     min-block-size: 44px;
     margin-block-start: 0.5rem;
+  }
+  button.menu-link {
+    background: none;
+    border: 0;
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+    text-align: start;
   }
   .history { display: flex; flex-direction: column; gap: 0.25rem; }
   .history-row { display: flex; align-items: center; gap: 0.25rem; }
