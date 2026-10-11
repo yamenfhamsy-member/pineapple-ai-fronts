@@ -118,6 +118,19 @@ section {
 }
 .msg { margin-block: 0.5rem; }
 .msg-err { color: var(--danger, #B3261E); }
+/* Chat bubbles — global (not scoped): islands inject these nodes at runtime,
+   so Astro's scoped cid selectors would never match them. */
+.msg-user p {
+  background: var(--brand);
+  color: #000;
+  border-radius: 1rem;
+  padding: 0.6rem 0.9rem;
+  inline-size: fit-content;
+  max-inline-size: 75%;
+  margin-inline-start: auto;
+  overflow-wrap: break-word;
+}
+.msg-ai p { margin-block: 0.5rem; }
 .link-retry {
   margin-inline-start: 0.5rem;
   text-decoration: underline;
