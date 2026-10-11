@@ -24,7 +24,7 @@ Arabic RTL frontend for `free-ai-gateway`. Contract source of truth: `GATEWAY_AP
 - `200` with empty content is a known upstream flake (easemate, `deepseek-r1`) — show «retry» hint, never treat as fatal.
 - curl without browser UA gets edge `403 code 1010` — always send browser UA in scripts; real browsers are unaffected.
 - `429 quota_exhausted` = freeai 6000 tok/day/IP exhausted — offer provider switch, not error. OCR needs ≤10 **public** URLs (`provider:darkps` + `file_urls` + `system_prompt`; private URLs 502). TTS `POST /v1/audio/speech` input ≤1000 chars, default returns WAV bytes; `format:json` returns URL.
-- Display names are neutral (like the bot) — never leak upstream source names; never surface raw upstream error text (may contain sources). Log `{provider, model, status, time}` to console.
+- Display names are neutral (like the bot) — never leak upstream source names; never surface raw upstream error text (may contain sources). UI pins product identity: `IDENTITY_PROMPT` (types.ts) is prepended to every chat `system_prompt` so models answer as Pineapple AI, never Claude/ChatGPT. Log `{provider, model, status, time}` to console.
 - UI reads `GET /v1/models` live (43 models, 6 providers) so new gateway models need no UI change; every new gateway provider/model MUST still be added to the bot (`/models` + routing).
 
 ## Brand (`public/`, user's own work — no attribution)
@@ -67,3 +67,4 @@ Arabic RTL frontend for `free-ai-gateway`. Contract source of truth: `GATEWAY_AP
 | 2026-10-11 | Pages `pineapple-ai` live via CLI (`pages.dev` 200) + multipage (welcome cards + per-tool pages, settings=temp/sys only) + easemate hidden (200-empty ×8/5 models → picker 15) + abort AbortError fix (live-verified silent) + live 390 ×3 pass + LH perf 93 | watch easemate recovery → unhide; optional dashboard auto-deploy |
 | 2026-10-11 | OCR/TTS pages deleted (user: chat-only) + chat restyled to clone layout (top-bar, brand bubbles, pill input, round +/-/send, real-actions plus-menu; bubbles CSS must stay global — islands inject nodes at runtime, scoped cid misses them) + live 390 pass | watch easemate recovery → unhide; optional dashboard auto-deploy |
 | 2026-10-11 | chat shape matched to reference screenshots (flat card, visible icon menu rows, thin 2-line menu glyph, smaller 20px icons, hero logo 22→12rem) + live 390 pass | watch easemate recovery → unhide; optional dashboard auto-deploy |
+| 2026-10-11 | identity pinned (`IDENTITY_PROMPT` — model claimed Claude) + session memory (last 20 user/assistant turns, busy-guard, cleared on new-chat; live-verified: recalled 42, answers as Pineapple) | watch easemate recovery → unhide; optional dashboard auto-deploy |
