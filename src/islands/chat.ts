@@ -8,7 +8,7 @@ import { loadSettings } from "./settings";
 
 export function initChat(): void {
   const form = document.getElementById("chat-form") as HTMLFormElement | null;
-  const input = document.getElementById("chat-input") as HTMLTextAreaElement | null;
+  const input = document.getElementById("chat-input") as HTMLInputElement | null;
   const log = document.getElementById("chat-log") as HTMLElement | null;
   const send = document.getElementById("chat-send") as HTMLButtonElement | null;
   const stop = document.getElementById("chat-stop") as HTMLButtonElement | null;
@@ -52,6 +52,28 @@ export function initChat(): void {
   };
 
   stop?.addEventListener("click", () => ctrl?.abort());
+
+  // Top-bar extras: new chat clears the log, plus toggles a menu of real actions.
+  const menu = document.getElementById("plus-menu") as HTMLElement | null;
+  const clearLog = (): void => {
+    if (log) log.innerHTML = "";
+  };
+  document.getElementById("chat-new")?.addEventListener("click", () => {
+    clearLog();
+    input.focus();
+  });
+  document.getElementById("chat-plus")?.addEventListener("click", () => {
+    if (menu) menu.hidden = !menu.hidden;
+  });
+  document.getElementById("plus-new")?.addEventListener("click", () => {
+    clearLog();
+    if (menu) menu.hidden = true;
+    input.focus();
+  });
+  document.getElementById("plus-model")?.addEventListener("click", () => {
+    if (menu) menu.hidden = true;
+    document.getElementById("model-select")?.focus();
+  });
 
   form.addEventListener("submit", (ev) => {
     ev.preventDefault();
