@@ -9,7 +9,7 @@ test("welcome shows Pineapple hero, tool cards, zero JS", async ({ page }) => {
   await expect(page).toHaveTitle(/Pineapple AI/);
   await expect(page.locator("#hero-title")).toHaveText("Pineapple AI");
   const cards = await page.evaluate(() => [...document.querySelectorAll(".card a")].map((a) => a.getAttribute("href")));
-  expect(cards).toEqual(["/chat", "/prompts", "/settings"]);
+  expect(cards).toEqual(["/chat", "/image", "/prompts", "/settings"]);
   // Zero-JS landing: no scripts at all.
   expect(await page.evaluate(() => document.querySelectorAll("script").length)).toBe(0);
   expect(errors).toEqual([]);

@@ -1,0 +1,40 @@
+---
+import Main from "../layouts/Main.astro";
+---
+
+<Main title="توليد الصور" description="Pineapple AI — توليد صور من النص مجاناً وبدون مفتاح.">
+  <section id="image" aria-labelledby="image-h">
+    <h2 id="image-h">توليد الصور</h2>
+    <form id="image-form">
+      <label for="image-prompt">صف الصورة</label>
+      <input id="image-prompt" type="text" autocomplete="off" placeholder="مثال: غروب الشمس فوق البحر" />
+      <label for="image-size">الحجم</label>
+      <select id="image-size">
+        <option value="512x512" selected>مربع 512×512</option>
+        <option value="768x512">عريض 768×512</option>
+        <option value="512x768">طولي 512×768</option>
+      </select>
+      <button id="image-send" class="btn-brand" type="submit" aria-label="ولّد الصورة">ولّد</button>
+    </form>
+    <div id="image-out" aria-live="polite"></div>
+    <img id="image-result" hidden alt="" />
+    <div class="row">
+      <a id="image-dl" class="btn-brand" hidden href="#" target="_blank" rel="noopener" aria-label="فتح الصورة بالحجم الكامل">فتح بالحجم الكامل</a>
+    </div>
+  </section>
+</Main>
+
+<script>
+  import { initImage } from "../islands/image.ts";
+  initImage();
+</script>
+
+<style>
+  #image-result {
+    inline-size: 100%;
+    max-inline-size: 32rem;
+    block-size: auto;
+    border-radius: 1rem;
+    margin-block-start: 0.75rem;
+  }
+</style>
