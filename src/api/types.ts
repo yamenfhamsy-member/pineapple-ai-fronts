@@ -65,10 +65,8 @@ export interface StoredModel {
 }
 
 export interface StoredSettings {
-  base: string;
   temperature: number;
   system_prompt: string;
-  stream: boolean;
 }
 
 export const DEFAULT_GATEWAY_BASE = "https://free-ai-gateway.img-api.workers.dev";
@@ -80,10 +78,8 @@ export const DEFAULT_MODEL: StoredModel = {
 };
 
 export const DEFAULT_SETTINGS: StoredSettings = {
-  base: DEFAULT_GATEWAY_BASE,
   temperature: 0.7,
   system_prompt: "",
-  stream: true,
 };
 
 // Exact Arabic UI strings (AGENTS.md — literal, do not rephrase).

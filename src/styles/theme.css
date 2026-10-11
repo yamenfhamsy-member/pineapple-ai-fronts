@@ -87,6 +87,64 @@ h1, h2.hero-title {
   unicode-bidi: isolate;
 }
 
+/* Shared layout: header nav, content sections, forms (all pages). */
+.wrap nav {
+  padding-block: 1rem;
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+.wrap nav a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+}
+section {
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-block: 1rem;
+  max-inline-size: 100%;
+}
+#chat-log {
+  min-block-size: 8rem;
+  max-block-size: 24rem;
+  overflow-y: auto;
+  border: 1px dashed color-mix(in srgb, var(--muted) 40%, transparent);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  margin-block-end: 0.75rem;
+}
+.msg { margin-block: 0.5rem; }
+.msg-err { color: var(--danger, #B3261E); }
+.link-retry {
+  margin-inline-start: 0.5rem;
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  min-block-size: 44px;
+}
+.row { display: flex; gap: 0.5rem; margin-block-start: 0.5rem; }
+label { display: block; margin-block: 0.5rem 0.25rem; font-weight: 600; }
+:where(input, select, textarea) {
+  inline-size: 100%;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 45%, transparent);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+}
+:where(select, textarea, input:not([type="checkbox"])) {
+  min-block-size: 44px;
+}
+#tts-audio { inline-size: 100%; margin-block-start: 0.5rem; }
+#ocr-out, #tts-out { margin-block-start: 0.75rem; }
+
 /* Reduced motion kills non-essential motion. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

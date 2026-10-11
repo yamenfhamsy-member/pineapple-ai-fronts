@@ -4,6 +4,8 @@ dist/
 .opencode/skills/
 *.har
 .astro/
+test-results/
+playwright-report/
 
 # wrangler files
 .wrangler

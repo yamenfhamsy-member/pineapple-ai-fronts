@@ -1,11 +1,16 @@
 // Models island — reads GET /v1/models live, persists pineapple:model.
 // Default UI model: freeai/qwen3-8b. Neutral display names from gateway (never upstream sources).
 import { DEFAULT_MODEL } from "../api/types";
-import { getBase, getKey, listModels } from "../api/client";
+import { listModels } from "../api/client";
 
 const KEY = "pineapple:model";
 const SELECT_ID = "model-select";
 const STATUS_ID = "model-status";
+
+// Providers verified dead are hidden from the picker.
+// easemate: HTTP 200 + empty content on 5 models / 8 consecutive probes (2026-10-11).
+// Re-enable when the gateway recovers (just delete the entry).
+const DEAD_PROVIDERS: string[] = ["easemate"];
 
 export function loadStoredModel(): { provider: string; model: string; display: string } {
   try {
@@ -35,6 +40,7 @@ export function initModels(): void {
 
   const render = (models: Array<{ id: string; display: string; owned_by: string }>): void => {
     sel.innerHTML = "";
+    let matched = false;
     for (const m of models) {
       const opt = document.createElement("option");
       const provider = providerOf(m);
@@ -42,8 +48,24 @@ export function initModels(): void {
       opt.value = JSON.stringify({ provider, model: m.id, display: m.display });
       opt.textContent = m.display;
       const cur = JSON.stringify(stored);
-      if (opt.value === cur || (stored.model === m.id && stored.provider === provider)) opt.selected = true;
+      if (opt.value === cur || (stored.model === m.id && stored.provider === provider)) {
+        opt.selected = true;
+        matched = true;
+      }
       sel.appendChild(opt);
+    }
+    if (!matched && sel.options.length > 0) {
+      // Stored model is gone (e.g. its provider was filtered as dead) → fall back to default.
+      const defVal = JSON.stringify({ ...DEFAULT_MODEL });
+      const pick = [...sel.options].find((o) => o.value === defVal) ?? sel.options[0];
+      if (pick) {
+        pick.selected = true;
+        try {
+          localStorage.setItem(KEY, pick.value);
+        } catch {
+          /* storage full/blocked — ignore */
+        }
+      }
     }
     if (status) status.textContent = `عدد النماذج: ${models.length}`;
   };
@@ -63,11 +85,13 @@ export function initModels(): void {
   if (warm.length > 0) render(warm);
 
   listModels()
-    .then((res) => render(res.data))
+    .then((res) => {
+      const live = res.data.filter((m) => !DEAD_PROVIDERS.includes(providerOf(m)));
+      // Never brick the picker: if filtering empties the list, show everything.
+      render(live.length > 0 ? live : res.data);
+    })
     .catch((e: unknown) => {
       // Offline or gateway down — keep stored value, never wipe.
-      void getBase;
-      void getKey;
       if (status) status.textContent = !navigator.onLine ? "لا يوجد اتصال بالإنترنت." : "تعذر تحديث القائمة — تُستخدم القيمة المحفوظة.";
       console.log(JSON.stringify({ provider: "registry", model: "models", status: (e as { status?: number })?.status ?? 0, time: new Date().toISOString() }));
     });

@@ -1,0 +1,19 @@
+---
+import Main from "../layouts/Main.astro";
+---
+
+<Main title="الإعدادات" description="Pineapple AI — الحرارة وتعليمات النظام.">
+  <section id="settings" aria-labelledby="set-h">
+    <h2 id="set-h">الإعدادات</h2>
+    <label for="set-temp">الحرارة (temperature)</label>
+    <input id="set-temp" type="number" min="0" max="2" step="0.1" dir="ltr" />
+    <label for="set-sys">تعليمات النظام (system prompt)</label>
+    <textarea id="set-sys" rows="2"></textarea>
+    <p role="status">تُحفظ الإعدادات تلقائياً على هذا الجهاز.</p>
+  </section>
+</Main>
+
+<script>
+  import { initSettings } from "../islands/settings.ts";
+  initSettings();
+</script>

@@ -1,0 +1,32 @@
+---
+import Main from "../layouts/Main.astro";
+---
+
+<Main title="المحادثة" description="Pineapple AI — محادثة فورية مع 43 نموذجاً.">
+  <section id="models" aria-labelledby="models-h">
+    <h2 id="models-h">النموذج</h2>
+    <label for="model-select">اختر النموذج</label>
+    <select id="model-select" aria-describedby="model-status"></select>
+    <p id="model-status" role="status"></p>
+  </section>
+
+  <section id="chat" aria-labelledby="chat-h">
+    <h2 id="chat-h">المحادثة</h2>
+    <div id="chat-log" aria-live="polite" aria-label="سجل المحادثة"></div>
+    <form id="chat-form">
+      <label for="chat-input">رسالتك</label>
+      <textarea id="chat-input" rows="3" autocomplete="off"></textarea>
+      <div class="row">
+        <button id="chat-send" class="btn-brand" type="submit" aria-label="أرسل الرسالة">أرسل</button>
+        <button id="chat-stop" type="button" hidden aria-label="أوقف التوليد">أوقف</button>
+      </div>
+    </form>
+  </section>
+</Main>
+
+<script>
+  import { initModels } from "../islands/models.ts";
+  import { initChat } from "../islands/chat.ts";
+  initModels();
+  initChat();
+</script>

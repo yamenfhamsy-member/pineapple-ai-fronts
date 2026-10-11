@@ -8,41 +8,18 @@ import {
 } from "./types";
 
 // All gateway calls client-side (CORS * open; browser UA bypasses edge 1010).
+// Gateway base is fixed at build time (VITE_GATEWAY_BASE) — no UI to change it.
 // Never surface raw upstream error text (may leak source names) — map to neutral Arabic strings.
 // Always log {provider, model, status, time} to console.
 
-function readLS(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
 export function getBase(): string {
-  try {
-    const raw = readLS("pineapple:settings");
-    if (raw) {
-      const s = JSON.parse(raw) as { base?: string };
-      if (s.base && typeof s.base === "string" && s.base.startsWith("http")) return s.base.replace(/\/$/, "");
-    }
-  } catch {
-    /* fall through */
-  }
   const envBase = import.meta.env.VITE_GATEWAY_BASE as string | undefined;
   return (envBase || DEFAULT_GATEWAY_BASE).replace(/\/$/, "");
-}
-
-export function getKey(): string | null {
-  const k = readLS("pineapple:key");
-  return k && k.length > 0 ? k : null;
 }
 
 function headers(json = true): HeadersInit {
   const h: Record<string, string> = {};
   if (json) h["Content-Type"] = "application/json";
-  const key = getKey();
-  if (key) h["Authorization"] = `Bearer ${key}`;
   return h;
 }
 

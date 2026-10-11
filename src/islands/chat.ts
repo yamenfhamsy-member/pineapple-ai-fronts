@@ -1,8 +1,8 @@
-// Chat island — vanilla TS, no framework. Handles non-stream + SSE stream + abort.
+// Chat island — vanilla TS, no framework. Always streams (SSE) with abort.
 // Error mapping: literal Arabic strings from types. 200-empty = retry hint (known flake).
 // 429 quota_exhausted = offer provider switch, not fatal.
 import { ERR_STRINGS, type GatewayErrorShape } from "../api/types";
-import { chatOnce, chatStream } from "../api/client";
+import { chatStream } from "../api/client";
 import { loadStoredModel } from "./models";
 import { loadSettings } from "./settings";
 
@@ -102,13 +102,9 @@ export function initChat(): void {
         errLine(g?.userMessage || ERR_STRINGS.upstream502, g?.status === 429 || g?.status === 502 ? run : null);
       };
 
-      if (settings.stream) {
-        void chatStream(req, (delta) => {
-          if (aiText) aiText.textContent = (aiText.textContent === "…" ? "" : aiText.textContent ?? "") + delta;
-        }, ctrl.signal).then(done, fail);
-      } else {
-        void chatOnce(req, ctrl.signal).then(done, fail);
-      }
+      void chatStream(req, (delta) => {
+        if (aiText) aiText.textContent = (aiText.textContent === "…" ? "" : aiText.textContent ?? "") + delta;
+      }, ctrl.signal).then(done, fail);
     };
     run();
   });

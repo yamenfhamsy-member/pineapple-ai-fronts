@@ -1,186 +1,51 @@
 ---
+import Main from "../layouts/Main.astro";
 import Hero from "../components/Hero.astro";
-import "../styles/theme.css";
+
+// Zero-JS welcome page: static HTML only, no <script>.
+const tools = [
+  { href: "/chat", name: "المحادثة", desc: "اسأل وأجب فورياً — 43 نموذجاً مع بث الرد وإيقاف التوليد." },
+  { href: "/ocr", name: "الصور", desc: "استخراج النص من الصور العامة (حتى 10 روابط)." },
+  { href: "/tts", name: "الصوت", desc: "تحويل النص إلى صوت مسموع (حتى 1000 حرف)." },
+  { href: "/settings", name: "الإعدادات", desc: "الحرارة وتعليمات النظام." },
+];
 ---
 
-<!doctype html>
-<html lang="ar" dir="rtl">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pineapple AI — مساعد عربي</title>
-    <meta name="description" content="Pineapple AI — محادثة وصوت وصور عبر free-ai-gateway." />
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div class="wrap">
-      <header>
-        <nav aria-label="التنقل الرئيسي">
-          <a href="#chat">المحادثة</a>
-          <span aria-hidden="true"> · </span>
-          <a href="#ocr">الصور</a>
-          <span aria-hidden="true"> · </span>
-          <a href="#tts">الصوت</a>
-          <span aria-hidden="true"> · </span>
-          <a href="#settings">الإعدادات</a>
-        </nav>
-      </header>
+<Main title="مساعد عربي" description="Pineapple AI — مساعد عربي سريع: محادثة وصوت وصور.">
+  <Hero />
 
-      <main>
-        <Hero />
-
-        <section id="models" aria-labelledby="models-h">
-          <h2 id="models-h">النموذج</h2>
-          <label for="model-select">اختر النموذج</label>
-          <select id="model-select" aria-describedby="model-status"></select>
-          <p id="model-status" role="status"></p>
-        </section>
-
-        <section id="chat" aria-labelledby="chat-h">
-          <h2 id="chat-h">المحادثة</h2>
-          <div id="chat-log" aria-live="polite" aria-label="سجل المحادثة"></div>
-          <form id="chat-form">
-            <label for="chat-input">رسالتك</label>
-            <textarea id="chat-input" rows="3" autocomplete="off"></textarea>
-            <div class="row">
-              <button id="chat-send" class="btn-brand" type="submit" aria-label="أرسل الرسالة">أرسل</button>
-              <button id="chat-stop" type="button" hidden aria-label="أوقف التوليد">أوقف</button>
-            </div>
-          </form>
-        </section>
-
-        <section id="ocr" aria-labelledby="ocr-h">
-          <h2 id="ocr-h">استخراج النص من الصور (OCR)</h2>
-          <form id="ocr-form">
-            <label for="ocr-urls">روابط الصور العامة (حتى 10، سطر لكل رابط)</label>
-            <textarea id="ocr-urls" rows="3" dir="ltr"></textarea>
-            <label for="ocr-sys">تعليمات إضافية (اختياري)</label>
-            <input id="ocr-sys" type="text" autocomplete="off" />
-            <button id="ocr-send" class="btn-brand" type="submit" aria-label="استخرج النص من الصور">استخرج</button>
-          </form>
-          <div id="ocr-out" aria-live="polite"></div>
-        </section>
-
-        <section id="tts" aria-labelledby="tts-h">
-          <h2 id="tts-h">تحويل النص إلى صوت (TTS)</h2>
-          <form id="tts-form">
-            <label for="tts-input">النص (حتى 1000 حرف)</label>
-            <textarea id="tts-input" rows="3" maxlength="1000"></textarea>
-            <button id="tts-send" class="btn-brand" type="submit" aria-label="حوّل النص إلى صوت">شغّل الصوت</button>
-          </form>
-          <audio id="tts-audio" controls></audio>
-          <div id="tts-out" aria-live="polite"></div>
-        </section>
-
-        <section id="settings" aria-labelledby="set-h">
-          <h2 id="set-h">الإعدادات</h2>
-          <label for="set-base">عنوان القاعدة</label>
-          <input id="set-base" type="url" dir="ltr" autocomplete="off" />
-          <label for="set-temp">الحرارة (temperature)</label>
-          <input id="set-temp" type="number" min="0" max="2" step="0.1" dir="ltr" />
-          <label for="set-sys">تعليمات النظام (system prompt)</label>
-          <textarea id="set-sys" rows="2"></textarea>
-          <label><input id="set-stream" type="checkbox" /> بث الرد (stream)</label>
-          <label for="set-key">مفتاح الوصول (اختياري — PROXY_KEY)</label>
-          <input id="set-key" type="password" dir="ltr" autocomplete="off" />
-          <button id="set-key-clear" type="button" aria-label="امسح المفتاح المحفوظ">امسح المفتاح</button>
-        </section>
-      </main>
-
-      <footer>
-        <p>
-          القاعدة: <a class="ltr" href="https://free-ai-gateway.img-api.workers.dev/v1/models">free-ai-gateway/v1/models</a>
-        </p>
-      </footer>
+  <section aria-labelledby="tools-h">
+    <h2 id="tools-h">الأدوات</h2>
+    <div class="cards">
+      {tools.map((t) => (
+        <article class="card">
+          <h3>{t.name}</h3>
+          <p>{t.desc}</p>
+          <a class="btn-brand card-cta" href={t.href} aria-label={`افتح ${t.name}`}>افتح</a>
+        </article>
+      ))}
     </div>
+  </section>
+</Main>
 
-    <script>
-      import { initModels } from "../islands/models.ts";
-      import { initSettings } from "../islands/settings.ts";
-      import { initChat } from "../islands/chat.ts";
-      import { initOcr } from "../islands/ocr.ts";
-      import { initTts } from "../islands/tts.ts";
-      initSettings();
-      initModels();
-      initChat();
-      initOcr();
-      initTts();
-    </script>
-
-    <style>
-      .wrap nav {
-        padding-block: 1rem;
-        display: flex;
-        gap: 0.25rem;
-        flex-wrap: wrap;
-      }
-      .wrap nav a {
-        display: inline-flex;
-        align-items: center;
-        min-block-size: 44px;
-      }
-      #set-key-clear {
-        min-block-size: 44px;
-        padding-inline: 0.75rem;
-      }
-      section {
-        background: var(--surface);
-        border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
-        border-radius: 1rem;
-        padding: 1rem;
-        margin-block: 1rem;
-        max-inline-size: 100%;
-      }
-      #chat-log {
-        min-block-size: 8rem;
-        max-block-size: 24rem;
-        overflow-y: auto;
-        border: 1px dashed color-mix(in srgb, var(--muted) 40%, transparent);
-        border-radius: 0.5rem;
-        padding: 0.5rem;
-        margin-block-end: 0.75rem;
-      }
-      .msg { margin-block: 0.5rem; }
-      .msg-err { color: var(--danger, #B3261E); }
-      .link-retry {
-        margin-inline-start: 0.5rem;
-        text-decoration: underline;
-        background: none;
-        border: 0;
-        cursor: pointer;
-        min-block-size: 44px;
-      }
-      .row { display: flex; gap: 0.5rem; margin-block-start: 0.5rem; }
-      label { display: block; margin-block: 0.5rem 0.25rem; font-weight: 600; }
-      :where(input, select, textarea) {
-        inline-size: 100%;
-        max-inline-size: 100%;
-        box-sizing: border-box;
-        padding: 0.6rem;
-        border-radius: 0.5rem;
-        border: 1px solid color-mix(in srgb, var(--muted) 45%, transparent);
-        background: var(--surface);
-        color: inherit;
-        font: inherit;
-      }
-      :where(select, textarea, input:not([type="checkbox"])) {
-        min-block-size: 44px;
-      }
-      label:has(> input[type="checkbox"]) {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        min-block-size: 44px;
-      }
-      #tts-audio { inline-size: 100%; margin-block-start: 0.5rem; }
-    </style>
-  </body>
-</html>
+<style>
+  .cards {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  }
+  .card {
+    border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .card h3 { margin: 0; }
+  .card p { margin: 0 0 0.5rem; color: var(--muted); }
+  .card-cta {
+    align-self: start;
+    text-decoration: none;
+  }
+</style>

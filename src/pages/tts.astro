@@ -1,0 +1,21 @@
+---
+import Main from "../layouts/Main.astro";
+---
+
+<Main title="الصوت" description="Pineapple AI — تحويل النص إلى صوت مسموع.">
+  <section id="tts" aria-labelledby="tts-h">
+    <h2 id="tts-h">تحويل النص إلى صوت (TTS)</h2>
+    <form id="tts-form">
+      <label for="tts-input">النص (حتى 1000 حرف)</label>
+      <textarea id="tts-input" rows="3" maxlength="1000"></textarea>
+      <button id="tts-send" class="btn-brand" type="submit" aria-label="حوّل النص إلى صوت">شغّل الصوت</button>
+    </form>
+    <audio id="tts-audio" controls></audio>
+    <div id="tts-out" aria-live="polite"></div>
+  </section>
+</Main>
+
+<script>
+  import { initTts } from "../islands/tts.ts";
+  initTts();
+</script>
