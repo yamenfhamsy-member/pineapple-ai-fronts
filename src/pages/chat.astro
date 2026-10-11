@@ -13,10 +13,12 @@ import Main from "../layouts/Main.astro";
   <section id="chat" aria-labelledby="chat-h">
     <h2 id="chat-h" class="sr-only">المحادثة</h2>
     <div class="top-bar">
-      <a class="icon-btn" href="/" aria-label="القائمة الرئيسية">☰</a>
+      <a class="icon-btn" href="/" aria-label="القائمة الرئيسية">
+        <span class="lines" aria-hidden="true"><span></span><span></span></span>
+      </a>
       <span class="name-pill" aria-hidden="true">✦ Pineapple AI</span>
       <button id="chat-new" class="icon-btn" type="button" aria-label="محادثة جديدة">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
       </button>
@@ -24,9 +26,34 @@ import Main from "../layouts/Main.astro";
 
     <div id="chat-log" class="chat-area" aria-live="polite" aria-label="سجل المحادثة"></div>
 
-    <div id="plus-menu" class="plus-menu" hidden>
-      <button id="plus-new" type="button">محادثة جديدة</button>
-      <button id="plus-model" type="button">تغيير النموذج</button>
+    <div id="plus-menu" class="plus-menu">
+      <button id="plus-new" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+        </svg>
+        محادثة جديدة
+      </button>
+      <button id="plus-model" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="4" y1="21" x2="4" y2="14" />
+          <line x1="4" y1="10" x2="4" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12" y2="3" />
+          <line x1="20" y1="21" x2="20" y2="16" />
+          <line x1="20" y1="12" x2="20" y2="3" />
+          <line x1="1" y1="14" x2="7" y2="14" />
+          <line x1="9" y1="8" x2="15" y2="8" />
+          <line x1="17" y1="16" x2="23" y2="16" />
+        </svg>
+        تغيير النموذج
+      </button>
+      <a id="plus-settings" class="menu-link" href="/settings">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        الإعدادات
+      </a>
     </div>
 
     <form id="chat-form" class="input-area">
@@ -34,7 +61,7 @@ import Main from "../layouts/Main.astro";
       <button id="chat-plus" class="icon-btn" type="button" aria-label="خيارات إضافية">+</button>
       <input id="chat-input" class="pill" type="text" placeholder="اسأل Pineapple" autocomplete="off" aria-label="رسالتك" />
       <button id="chat-send" class="icon-btn send" type="submit" aria-label="أرسل الرسالة">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 19V5" />
           <path d="M5 12l7-7 7 7" />
         </svg>
@@ -52,6 +79,12 @@ import Main from "../layouts/Main.astro";
 </script>
 
 <style>
+  /* Flat chat card (clone shape) — model picker above keeps its card. */
+  #chat {
+    background: transparent;
+    border: 0;
+    padding: 0;
+  }
   .top-bar {
     display: flex;
     align-items: center;
@@ -69,11 +102,25 @@ import Main from "../layouts/Main.astro";
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.15rem;
     line-height: 1;
     text-decoration: none;
     cursor: pointer;
   }
+  /* Thin two-line menu glyph (clone shape), smaller than ☰. */
+  .lines {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    inline-size: 18px;
+  }
+  .lines span {
+    display: block;
+    block-size: 2px;
+    background: currentColor;
+    border-radius: 2px;
+  }
+  .lines span:nth-child(2) { inline-size: 70%; }
   .name-pill {
     border: 1px solid color-mix(in srgb, var(--muted) 45%, transparent);
     border-radius: 999px;
@@ -88,20 +135,25 @@ import Main from "../layouts/Main.astro";
   .plus-menu {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
     margin-block: 0.5rem;
+    margin-inline-start: 0.5rem;
   }
   .plus-menu[hidden] { display: none; }
-  .plus-menu button {
+  .plus-menu button, .menu-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     text-align: start;
-    background: var(--surface);
+    background: none;
     color: var(--ink);
-    border: 1px solid color-mix(in srgb, var(--muted) 45%, transparent);
-    border-radius: 0.75rem;
-    padding: 0.7rem 1rem;
+    border: 0;
+    padding: 0.25rem;
     font: inherit;
+    font-size: 1rem;
     min-block-size: 44px;
     cursor: pointer;
+    text-decoration: none;
   }
   .input-area {
     display: flex;
