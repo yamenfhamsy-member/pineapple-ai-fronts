@@ -78,6 +78,40 @@ export function initChat(): void {
     document.getElementById("model-select")?.focus();
   });
 
+  // Voice input via Web Speech API (real dictation into the input).
+  // Hidden where unsupported — never a dead button.
+  interface SpeechRec {
+    lang: string;
+    interimResults: boolean;
+    onresult: ((ev: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+    onend: (() => void) | null;
+    start(): void;
+  }
+  const w = window as unknown as Record<string, unknown>;
+  const SRCtor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+  const mic = document.getElementById("chat-mic") as HTMLButtonElement | null;
+  if (typeof SRCtor === "function" && mic) {
+    const rec = new (SRCtor as new () => SpeechRec)();
+    rec.lang = "ar-SA";
+    rec.interimResults = false;
+    rec.onresult = (ev) => {
+      const t = ev.results[0]?.[0]?.transcript ?? "";
+      if (t) {
+        input.value = input.value ? `${input.value} ${t}` : t;
+        input.focus();
+      }
+    };
+    mic.addEventListener("click", () => {
+      try {
+        rec.start();
+      } catch {
+        /* already started — ignore */
+      }
+    });
+  } else {
+    mic?.remove();
+  }
+
   form.addEventListener("submit", (ev) => {
     ev.preventDefault();
     const text = input.value.trim();
