@@ -95,8 +95,10 @@ export function initChat(): void {
       const fail = (e: unknown): void => {
         setBusy(false);
         aiBox.remove();
-        const g = e as GatewayErrorShape;
-        if (g?.code === "aborted") return;
+        const g = e as GatewayErrorShape & { name?: string };
+        // Abort surfaces as DOMException AbortError (fetch/reader rejection),
+        // not just our explicit {code:"aborted"} — both stay silent.
+        if (g?.code === "aborted" || g?.name === "AbortError") return;
         errLine(g?.userMessage || ERR_STRINGS.upstream502, g?.status === 429 || g?.status === 502 ? run : null);
       };
 
