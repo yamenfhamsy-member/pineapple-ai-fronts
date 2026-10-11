@@ -64,14 +64,15 @@ export function initChat(): void {
     saveChats(rest);
     renderHistoryList();
   };
-  const renderHistoryList = (): void => {
+  const renderHistoryList = (filter = ""): void => {
     if (!historyBox) return;
     historyBox.innerHTML = "";
-    const list = loadChats();
+    const q = filter.trim();
+    const list = loadChats().filter((c) => q.length === 0 || c.title.includes(q));
     if (list.length === 0) {
       const p = document.createElement("p");
       p.className = "history-empty";
-      p.textContent = "لا محادثات محفوظة بعد.";
+      p.textContent = q.length > 0 ? "لا نتائج مطابقة." : "لا محادثات محفوظة بعد.";
       historyBox.appendChild(p);
       return;
     }
@@ -92,9 +93,7 @@ export function initChat(): void {
         sessionId = c.id;
         history.length = 0;
         history.push(...c.messages.slice(-HISTORY_LIMIT));
-        log.innerHTML = "";
-        for (const m of history) bubble(m.role === "user" ? "user" : "assistant", m.content);
-        log.scrollTop = log.scrollHeight;
+        renderAll();
         setSide(false);
       });
       const del = document.createElement("button");
@@ -145,6 +144,74 @@ export function initChat(): void {
     log.appendChild(div);
     log.scrollTop = log.scrollHeight;
     return div;
+  };
+
+  const renderAll = (): void => {
+    log.innerHTML = "";
+    for (const m of history) {
+      const box = bubble(m.role === "user" ? "user" : "assistant", m.content);
+      if (m.role === "assistant") attachActions(box, m.content);
+    }
+    log.scrollTop = log.scrollHeight;
+  };
+
+  const copyText = (text: string, btn: HTMLButtonElement): void => {
+    const done = (): void => {
+      const old = btn.textContent;
+      btn.textContent = "✓";
+      setTimeout(() => {
+        btn.textContent = old;
+      }, 1200);
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+  };
+
+  const fallbackCopy = (text: string, done: () => void): void => {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      done();
+    } catch {
+      /* clipboard unavailable — leave the button as-is */
+    }
+  };
+
+  // Copy + regenerate actions under assistant messages (regenerate re-runs the turn).
+  const attachActions = (box: HTMLElement, full: string): void => {
+    const row = document.createElement("div");
+    row.className = "msg-actions";
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "mini-btn";
+    copy.textContent = "نسخ";
+    copy.setAttribute("aria-label", "نسخ الرد");
+    copy.addEventListener("click", () => copyText(full, copy));
+    const regen = document.createElement("button");
+    regen.type = "button";
+    regen.className = "mini-btn";
+    regen.textContent = "↻ إعادة";
+    regen.setAttribute("aria-label", "إعادة توليد الرد");
+    regen.addEventListener("click", () => {
+      if (send.disabled || history.length === 0) return;
+      const lastUser = history.map((m) => m.role).lastIndexOf("user");
+      if (lastUser < 0) return;
+      history.splice(lastUser + 1);
+      renderAll();
+      run(history[lastUser]?.content ?? "");
+    });
+    row.appendChild(copy);
+    row.appendChild(regen);
+    box.appendChild(row);
   };
 
   const errLine = (text: string, retry: (() => void) | null): void => {
@@ -239,19 +306,17 @@ export function initChat(): void {
     mic?.remove();
   }
 
-  form.addEventListener("submit", (ev) => {
-    ev.preventDefault();
-    const text = input.value.trim();
-    const run = (): void => {
-      if (send.disabled) return;
-      if (!navigator.onLine) {
-        errLine(ERR_STRINGS.offline, null);
-        return;
-      }
-      if (text.length === 0) {
-        errLine(ERR_STRINGS.empty400, null);
-        return;
-      }
+  const run = (override?: string): void => {
+    const text = (override ?? input.value).trim();
+    if (send.disabled) return;
+    if (!navigator.onLine) {
+      errLine(ERR_STRINGS.offline, null);
+      return;
+    }
+    if (text.length === 0) {
+      errLine(ERR_STRINGS.empty400, null);
+      return;
+    }
       const stored = loadStoredModel();
       const settings = loadSettings();
       ctrl = new AbortController();
@@ -282,6 +347,7 @@ export function initChat(): void {
         if (history.length > HISTORY_LIMIT) history.splice(0, history.length - HISTORY_LIMIT);
         upsertCurrent();
         if (aiText) aiText.textContent = full;
+        attachActions(aiBox, full);
       };
       const fail = (e: unknown): void => {
         setBusy(false);
@@ -296,7 +362,33 @@ export function initChat(): void {
       void chatStream(req, (delta) => {
         if (aiText) aiText.textContent = (aiText.textContent === "…" ? "" : aiText.textContent ?? "") + delta;
       }, ctrl.signal).then(done, fail);
-    };
+  };
+
+  form.addEventListener("submit", (ev) => {
+    ev.preventDefault();
     run();
+  });
+
+  // Sidebar extras: search saved chats + export the current one.
+  document.getElementById("history-search")?.addEventListener("input", (ev) => {
+    renderHistoryList((ev.target as HTMLInputElement).value);
+  });
+  const exportMd = (): string =>
+    `# Pineapple AI\n\n${history
+      .map((m) => (m.role === "user" ? `**أنت:** ${m.content}` : `**Pineapple AI:** ${m.content}`))
+      .join("\n\n")}`;
+  document.getElementById("export-md")?.addEventListener("click", () => {
+    if (history.length === 0) return;
+    const url = URL.createObjectURL(new Blob([exportMd()], { type: "text/markdown" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pineapple-chat-${Date.now()}.md`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  });
+  document.getElementById("export-copy")?.addEventListener("click", (ev) => {
+    if (history.length === 0) return;
+    const btn = ev.currentTarget as HTMLButtonElement;
+    copyText(exportMd(), btn);
   });
 }

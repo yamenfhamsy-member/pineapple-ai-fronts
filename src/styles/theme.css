@@ -131,6 +131,19 @@ section {
   overflow-wrap: break-word;
 }
 .msg-ai p { margin-block: 0.5rem; }
+/* Message actions — global (runtime-injected nodes, see bubbles rule above). */
+.msg-actions { display: flex; gap: 0.25rem; margin-block-start: 0.25rem; }
+.mini-btn {
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--muted) 45%, transparent);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+  font-size: 0.85rem;
+  min-block-size: 44px;
+  cursor: pointer;
+}
 .link-retry {
   margin-inline-start: 0.5rem;
   text-decoration: underline;

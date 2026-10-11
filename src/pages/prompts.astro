@@ -1,0 +1,44 @@
+---
+import Main from "../layouts/Main.astro";
+import { PRESETS } from "../islands/prompts.ts";
+---
+
+<Main title="القوالب" description="Pineapple AI — قوالب تعليمات جاهزة بالعربية.">
+  <section aria-labelledby="presets-h">
+    <h2 id="presets-h">مكتبة القوالب</h2>
+    <p>اختر قالباً ليُستخدم كتعليمات نظام في المحادثة.</p>
+    <div class="cards">
+      {PRESETS.map((p) => (
+        <article class="card">
+          <h3>{p.name}</h3>
+          <p>{p.desc}</p>
+          <button class="btn-brand card-cta" type="button" data-preset={p.id} aria-label={`استخدم قالب ${p.name}`}>استخدام</button>
+        </article>
+      ))}
+    </div>
+  </section>
+</Main>
+
+<script>
+  import { initPrompts } from "../islands/prompts.ts";
+  initPrompts();
+</script>
+
+<style>
+  .cards {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  }
+  .card {
+    border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .card h3 { margin: 0; }
+  .card p { margin: 0 0 0.5rem; color: var(--muted); }
+  .card-cta { align-self: start; }
+</style>

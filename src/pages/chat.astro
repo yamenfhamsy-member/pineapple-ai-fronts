@@ -44,7 +44,7 @@ import Main from "../layouts/Main.astro";
     <form id="chat-form" class="input-area" dir="ltr">
       <label class="sr-only" for="chat-input">رسالتك</label>
       <button id="chat-plus" class="icon-btn" type="button" aria-label="خيارات إضافية">+</button>
-      <input id="chat-input" class="pill" type="text" placeholder="اسأل Pineapple" autocomplete="off" aria-label="رسالتك" />
+      <input id="chat-input" class="pill" type="text" placeholder="اسأل Pineapple" autocomplete="off" />
       <button id="chat-send" class="icon-btn send" type="submit" aria-label="أرسل الرسالة">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 19V5" />
@@ -65,7 +65,12 @@ import Main from "../layouts/Main.astro";
     <aside id="sidebar" class="sidebar" aria-label="القائمة الجانبية">
       <button id="side-close" class="icon-btn" type="button" aria-label="إغلاق القائمة">×</button>
       <h3>المحادثات</h3>
+      <input id="history-search" type="search" placeholder="ابحث في المحادثات" aria-label="ابحث في المحادثات" autocomplete="off" />
       <div id="chat-history" class="history" role="list"></div>
+      <div class="row">
+        <button id="export-md" class="mini-btn" type="button">تصدير MD</button>
+        <button id="export-copy" class="mini-btn" type="button">نسخ الكل</button>
+      </div>
       <h3>النموذج</h3>
       <label for="model-select">اختر النموذج</label>
       <select id="model-select" aria-describedby="model-status"></select>
