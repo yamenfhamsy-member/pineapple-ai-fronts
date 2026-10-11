@@ -1,7 +1,7 @@
 // Chat island — vanilla TS, no framework. Always streams (SSE) with abort.
 // Error mapping: literal Arabic strings from types. 200-empty = retry hint (known flake).
 // 429 quota_exhausted = offer provider switch, not fatal.
-import { ERR_STRINGS, type GatewayErrorShape } from "../api/types";
+import { ERR_STRINGS, IDENTITY_PROMPT, type GatewayErrorShape } from "../api/types";
 import { chatStream } from "../api/client";
 import { loadStoredModel } from "./models";
 import { loadSettings } from "./settings";
@@ -101,7 +101,7 @@ export function initChat(): void {
         provider: stored.provider,
         messages: [{ role: "user" as const, content: text }],
         temperature: settings.temperature,
-        system_prompt: settings.system_prompt || undefined,
+        system_prompt: [IDENTITY_PROMPT, settings.system_prompt].filter((s) => s.trim().length > 0).join("\n"),
       };
       const done = (full: string): void => {
         setBusy(false);

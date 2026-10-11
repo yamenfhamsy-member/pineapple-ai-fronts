@@ -77,6 +77,11 @@ export const DEFAULT_MODEL: StoredModel = {
   display: "Qwen 3 8B",
 };
 
+// Identity prompt — always sent (before the user's own system prompt).
+// Upstream models sometimes claim other names (Claude, ChatGPT…) — this pins the product identity.
+export const IDENTITY_PROMPT =
+  "أنت Pineapple AI، مساعد ذكي يتكلم العربية. عرّف عن نفسك دائماً باسم Pineapple AI فقط، ولا تدّعِ أبداً أنك نموذج أو منتج آخر.";
+
 export const DEFAULT_SETTINGS: StoredSettings = {
   temperature: 0.7,
   system_prompt: "",
