@@ -2,9 +2,27 @@
 // Error mapping: literal Arabic strings from types. 200-empty = retry hint (known flake).
 // 429 quota_exhausted = offer provider switch, not fatal.
 import { ERR_STRINGS, HISTORY_LIMIT, IDENTITY_PROMPT, type ChatMessage, type GatewayErrorShape } from "../api/types";
-import { chatStream } from "../api/client";
+import { chatStream, generateImage } from "../api/client";
 import { loadStoredModel } from "./models";
 import { loadSettings } from "./settings";
+
+// User asks for an image → the assistant answers with the image tool (no LLM round-trip).
+// NOTE: no \b around Arabic words — \b only sees ASCII \w, so it never
+// matches Arabic boundaries. Use (\s|$) instead.
+const IMAGE_INTENT: RegExp[] = [
+  /ارسم(\s|$)/, // ارسم [أي شيء] — فعل رسم لا يُقصد به غير الصورة
+  /(أنشئ|انشئ|إنشئ|اصنع|ولّد|ولد|تخيل|تخيّل|صمّم|صمم)\s+(صورة|صور|رسم|لوحة|أيقونة|شعار|غلاف|مشهد|منظر)/,
+  /صورة\s+(ل|عن|لـ)/,
+  /(imagine|draw|generate|create|make)\b.{0,30}\b(image|picture|photo|painting|drawing)\b/i,
+  /\bdraw\s+me\b/i,
+];
+
+const imageMarker = (src: string): string => `![صورة مولّدة](${src})`;
+
+const parseImageMarker = (text: string): string | null => {
+  const m = /^!\[.*\]\((https?:\/\/\S+|data:image\/\w+;base64,[A-Za-z0-9+/=]+)\)$/.exec(text.trim());
+  return m?.[1] ?? null;
+};
 
 export function initChat(): void {
   const form = document.getElementById("chat-form") as HTMLFormElement | null;
@@ -149,10 +167,37 @@ export function initChat(): void {
   const renderAll = (): void => {
     log.innerHTML = "";
     for (const m of history) {
+      if (m.role === "assistant") {
+        const url = parseImageMarker(m.content);
+        if (url) {
+          imageBox(url);
+          continue;
+        }
+      }
       const box = bubble(m.role === "user" ? "user" : "assistant", m.content);
       if (m.role === "assistant") attachActions(box, m.content);
     }
     log.scrollTop = log.scrollHeight;
+  };
+
+  // Image answer bubble (tool result). Null url = loading placeholder.
+  const imageBox = (url: string | null): HTMLElement => {
+    const div = document.createElement("div");
+    div.className = "msg msg-ai msg-image";
+    if (url) {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = "صورة مولّدة";
+      img.loading = "lazy";
+      div.appendChild(img);
+    } else {
+      const p = document.createElement("p");
+      p.textContent = "… جارٍ توليد الصورة";
+      div.appendChild(p);
+    }
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+    return div;
   };
 
   const copyText = (text: string, btn: HTMLButtonElement): void => {
@@ -232,7 +277,62 @@ export function initChat(): void {
     log.appendChild(div);
   };
 
-  stop?.addEventListener("click", () => ctrl?.abort());
+  // Image tool path: generate via the gateway horde provider, answer with the picture.
+  // b64 is stored so saved chats keep working (R2 URLs expire after ~30 min).
+  let cancelImage: (() => void) | null = null;
+  const runImage = (text: string): void => {
+    ctrl = new AbortController();
+    setBusy(true);
+    bubble("user", text);
+    const box = imageBox(null);
+    input.value = "";
+    const signal = ctrl.signal;
+    let settled = false;
+    cancelImage = () => {
+      if (settled) return;
+      settled = true;
+      box.remove();
+      cancelImage = null;
+      setBusy(false);
+    };
+    void generateImage(text, "512x512", "b64_json", signal)
+      .then(({ url, b64 }) => {
+        if (settled) return;
+        settled = true;
+        cancelImage = null;
+        setBusy(false);
+        const src = b64 ? `data:image/webp;base64,${b64}` : (url ?? "");
+        if (!src) {
+          box.remove();
+          errLine(ERR_STRINGS.empty200, () => run(text));
+          return;
+        }
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = "صورة مولّدة";
+        img.loading = "lazy";
+        box.replaceChildren(img);
+        history.push({ role: "user", content: text });
+        history.push({ role: "assistant", content: imageMarker(src) });
+        if (history.length > HISTORY_LIMIT) history.splice(0, history.length - HISTORY_LIMIT);
+        upsertCurrent();
+      })
+      .catch((e: unknown) => {
+        if (settled) return;
+        settled = true;
+        cancelImage = null;
+        setBusy(false);
+        box.remove();
+        const g = e as GatewayErrorShape & { name?: string };
+        if (g?.code === "aborted" || g?.name === "AbortError") return;
+        errLine(g?.userMessage || ERR_STRINGS.upstream502, g?.status === 429 || g?.status === 502 ? () => run(text) : null);
+      });
+  };
+
+  stop?.addEventListener("click", () => {
+    ctrl?.abort();
+    cancelImage?.();
+  });
 
   // Sidebar drawer (models + settings live here now, off the main screen).
   const sidebar = document.getElementById("sidebar") as HTMLElement | null;
@@ -315,6 +415,10 @@ export function initChat(): void {
     }
     if (text.length === 0) {
       errLine(ERR_STRINGS.empty400, null);
+      return;
+    }
+    if (IMAGE_INTENT.some((re) => re.test(text))) {
+      runImage(text);
       return;
     }
       const stored = loadStoredModel();

@@ -25,10 +25,11 @@
 | aichat | ✅ | كوكيز جلسة + CSRF حي |
 | rewind | ✅ | `X-Anon-Token` لكل طلب |
 | chatsmith | ✅ | JWT مجهول + إثبات RSA |
+| horde | ✅ | توليد صور مجهول (بلا تسجيل)، استطلاع غير متزامن |
 
 ### `GET /v1/models`
 → 200 `{object:"list", data:[{id, object:"model", owned_by, display, ease_model_id?}]}`.
-الحي: **43** = easemate 28 (تُجلب حياً من `query_config` — غيابها لا يحجب البقية) + freeai 7 + darkps 1 (`gpt-ocr`) + aichat 5 + rewind 1 + chatsmith 1. المزود المعطّل تُحجب موديلاته تلقائياً (`PROVIDERS.free2gpt.active` مثال).
+الحي: **44** = easemate 28 (تُجلب حياً من `query_config` — غيابها لا يحجب البقية) + freeai 7 + darkps 1 (`gpt-ocr`) + aichat 5 + rewind 1 + chatsmith 1 + horde 1 (`stable-diffusion`, صور).
 
 ## 3. المحادثة — `POST /v1/chat/completions`
 
@@ -65,7 +66,23 @@
 **rewind** (1: `qwen/qwen-2.5-7b-instruct`): سكب `hi` لمنح `X-Anon-Token` ثم الطلب الحقيقي. موديلات أخرى ترد `REQUIRES_USER` → 502. الحي: `200 g-rewind`.
 **chatsmith** (1: `chatsmith-gpt-4o-mini`): JWT مجهول لكل طلب (`tier:free`) + إثبات RSA خالص بـ BigInt (WebCrypto لا يدعم `RSAES-PKCS1-v1_5`). رد OpenAI جاهز. `424` upstream تُترجم 502. الحي: `200 g-smith` + stream 200.
 
-## 4. الصوت — `POST /v1/audio/speech`
+## 4. الصور — `POST /v1/images/generations`
+```json
+{
+  "prompt": "a red apple",
+  "model": "stable-diffusion",
+  "size": "512x512",
+  "response_format": "url | b64_json"
+}
+```
+- التدفق: `generate/async` (مفتاح مجهول `0000000000`) → `202 {id}` → استطلاع `generate/check` كل 8s (حتى 18 مرة ≈150s) → `generate/status` → `generations[0].img`.
+- `url` (افتراضي): يُطلب بـ `r2:true` → رابط CDN مباشر. `b64_json`: base64 webp.
+- `size`: `"WxH"` تُقيد 64–1024 وتُقرب لمضاعفات 64 (افتراضي 512×512)؛ `steps` ثابت 20.
+- بلا prompt → `400 prompt with text required`. موديل مجهول → `400 unknown image model` (مُتحقق).
+- طابور ممتلئ/فشل: `502 horde generation faulted`، انتهاء الاستطلاع: `502 horde queue timeout (still waiting)` + الـ `id` للمتابعة اليدوية.
+- الحي: 200 برابط R2 حقيقي (مُتحقق إنتاجياً).
+
+## 5. الصوت — `POST /v1/audio/speech`
 ```json
 {"input": "نص ≤1000 حرف", "format": "json (اختياري)"}
 ```
@@ -73,16 +90,17 @@
 - `"format":"json"` → `{audio_url}`.
 - بلا نص → `400 input/text with text required`. فشل upstream → `502 tts failed` (مُتحقق مرة واحدة — الخدمة متقطعة).
 
-## 5. بوت تيليغرام (`@Pineapple_aibot`)
+## 6. بوت تيليغرام (`@Pineapple_aibot`)
 
 - Webhook: `POST /tg/hook/<TG_BOT_TOKEN>` (stateless؛ يُضبط مرة واحدة عبر Bot API `setWebhook`). الـ token **سر** (`wrangler secret put TG_BOT_TOKEN`) — أبداً في الكود.
 - الأوامر: `/start` (أزرار: تغيير الموديل/صوت/صورة)، `/models` (قائمة مسطحة تُبنى من `gatewayModels()` تلقائياً — 43 حالياً)، `/status` (الموديل الحالي)، أي نص آخر = محادثة، أي صورة = OCR.
 - قاعدة المزامنة: كل مزود/موديل جديد في الـ gateway **يجب** إضافته للبوت (القائمة + التوجيه). الأسماء المعروضة محايدة (لا أسماء مصادر).
 - التفضيلات في KV `PREFS` (`tg:<chatId>` → `{provider,model,display,mode}`؛ الافتراضي freeai/qwen3-8b).
 - خاص: محادثة نصية متدفقة (stream) لمزودات `freeai/aichat/darkps` في الخاص عبر `sendMessageDraft` (زر إيقاف أصلي → flag في KV يُجهض الحلقة)؛ البقية (rewind/chatsmith/easemate) غير-stream. الصور → `darkpsChat` مع `file_urls`. وضع الصوت (`mode:voice`) → `/v1/audio/speech` ثم `sendAudio`.
+- توليد الصور: من يختار موديل horde (`Stable Diffusion`) ويُرسل نصاً → `hordeImage` ثم `sendPhoto` (بالرابط مباشرة، أو رفع multipart من الـ base64) مع `upload_photo` أثناء الانتظار (~90s).
 - `callback_data` ≤64 حرف (`m:<provider>:<model>`)؛ الرسائل تُقطع 4000 حرف.
 
-## 6. جدول الأخطاء
+## 7. جدول الأخطاء
 
 | الحالة | code | المعنى |
 |---|---|---|
@@ -94,5 +112,5 @@
 | 502 | `AUTH_EXPIRED` | جلسة aichat انتهت — أعد حصاد الكوكيز |
 | 403 | `1010` (الحافة) | UA غير متصفح — ليست من الكود |
 
-## 7. المصفوفة الحية (2026-10-11)
-`models` 43 (28+7+1+5+1+1) ✅ | صدى 200 لكل المزودات الستة ✅ (easemate فارغ أحياناً — flake) | stream ✅ | صوت WAV ✅ | `400` فارغ ✅ | `404` ✅ | `1010` بدون UA ✅.
+## 8. المصفوفة الحية (2026-10-11)
+`models` 44 (28+7+1+5+1+1+1) ✅ | صدى 200 لكل المزودات الستة ✅ (easemate فارغ أحياناً — flake) | صورة 200 برابط R2 ✅ | stream ✅ | صوت WAV ✅ | `400` فارغ ✅ | `404` ✅ | `1010` بدون UA ✅.

@@ -12,6 +12,9 @@ const STATUS_ID = "model-status";
 // Re-enable when the gateway recovers (just delete the entry).
 const DEAD_PROVIDERS: string[] = ["easemate"];
 
+// Image-only models are hidden from the CHAT picker (they live on /image).
+const IMAGE_ONLY_MODELS: string[] = ["stable-diffusion"];
+
 export function loadStoredModel(): { provider: string; model: string; display: string } {
   try {
     const raw = localStorage.getItem(KEY);
@@ -100,7 +103,9 @@ export function initModels(): void {
 
   listModels()
     .then((res) => {
-      const live = res.data.filter((m) => !DEAD_PROVIDERS.includes(providerOf(m)));
+      const live = res.data.filter(
+        (m) => !DEAD_PROVIDERS.includes(providerOf(m)) && !IMAGE_ONLY_MODELS.includes(m.id),
+      );
       // Never brick the picker: if filtering empties the list, show everything.
       render(live.length > 0 ? live : res.data);
     })

@@ -149,3 +149,42 @@ export async function chatStream(
   if (buf.trim().length > 0) handleLine(buf);
   return full;
 }
+
+// Image generation via the gateway horde provider (Stable Horde, anonymous).
+// Synchronous: the gateway polls upstream internally (up to ~150s) then answers
+// OpenAI-style {created, data:[{url}]} or {data:[{b64_json}]}. Pass signal to abort.
+export async function generateImage(
+  prompt: string,
+  size = "512x512",
+  format: "url" | "b64_json" = "url",
+  signal?: AbortSignal,
+): Promise<{ url?: string; b64?: string }> {
+  if (prompt.trim().length === 0) {
+    throw { status: 400, code: "bad_request", message: "empty", userMessage: ERR_STRINGS.empty400 } as GatewayErrorShape;
+  }
+  const base = getBase();
+  const res = await fetch(`${base}/v1/images/generations`, {
+    method: "POST",
+    headers: headers(true),
+    body: JSON.stringify({ prompt, model: "stable-diffusion", size, response_format: format }),
+    signal,
+  });
+  logCall("horde", "stable-diffusion", res.status);
+  const body = (await res.json().catch(() => ({}))) as {
+    data?: Array<{ url?: string; b64_json?: string }>;
+    error?: { code?: string };
+  };
+  if (!res.ok) {
+    throw {
+      status: res.status,
+      code: body.error?.code ?? "upstream_error",
+      message: body.error?.code ?? "horde failed",
+      userMessage: mapError(res.status, body.error?.code ?? "upstream_error"),
+    } as GatewayErrorShape;
+  }
+  const first = body.data?.[0];
+  if (!first || (!first.url && !first.b64_json)) {
+    throw { status: 200, code: "empty", message: "empty", userMessage: ERR_STRINGS.empty200 } as GatewayErrorShape;
+  }
+  return { url: first.url, b64: first.b64_json };
+}
