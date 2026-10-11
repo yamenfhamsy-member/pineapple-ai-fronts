@@ -1,18 +1,16 @@
-/*
-  headers
-*/
-/*
-  Cache static assets aggressively; HTML never cached (gateway base may change).
-*/
-/public/pineapple.jpg
+# Pineapple AI — Cloudflare Pages headers.
+# Hashed/static assets cache immutable; HTML + security headers below.
+/pineapple.jpg
   Cache-Control: public, max-age=31536000, immutable
-/public/favicon-32.png
+/favicon-32.png
   Cache-Control: public, max-age=31536000, immutable
-/public/favicon.ico
+/favicon.ico
   Cache-Control: public, max-age=31536000, immutable
-/public/apple-touch-icon.png
+/apple-touch-icon.png
   Cache-Control: public, max-age=31536000, immutable
-/*
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+/
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
