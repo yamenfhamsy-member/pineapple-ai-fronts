@@ -46,7 +46,7 @@ Arabic RTL frontend for `free-ai-gateway`. Contract source of truth: `GATEWAY_AP
 
 ## Commands
 
-- `npm ci` (first + before every build) · `npm run dev` (needs `.env`) · `npm run build` (must be green before every push) · `npm run preview` (check `dist` before Pages link) · `npx astro check` (after any `.astro` edit) · `npx playwright test` (step 6 + pre-publish).
+- `npm ci` (first + before every build) · `npm run dev` (needs `.env`) · `npm run build` (must be green before every push) · `npm run preview` (check `dist` before Pages link) · `npx astro check` (after any `.astro` edit) · `npm run test:e2e` (= `playwright test`: 15 tests in `tests/` — welcome/chat/settings/errors/mobile; local serves `dist/` via python http.server, live via `E2E_BASE_URL=https://pineapple-ai.pages.dev`; local Chrome via `PLAYWRIGHT_CHROME_PATH`).
 - Never run here: `wrangler dev`, `flutter`, `pubspec` (other folders' tools).
 - Chromium check (agent-browser `core,network,mobile`): HAR-start before open, JSON-only filter; desktop 1280 + mobile 390 (touch, no h-scroll, input above keyboard, targets ≥44px); HAR/screenshots to `/tmp` only, cleaned after; close step 6 with Markdown report + both screenshots.
 - Live verify (local then on `pages.dev`): models=43 · echo-200 all 6 providers · stream+`[DONE]` · abort works · WAV plays · 400/404/429-as-quota paths · 390px intact · Lighthouse green.
@@ -55,7 +55,7 @@ Arabic RTL frontend for `free-ai-gateway`. Contract source of truth: `GATEWAY_AP
 
 - Secrets (`TELEGRAM_BOT_TOKEN`/`TG_BOT_TOKEN`/`TG_ADMIN_ID`/`PROXY_KEY`) in env/secrets only — never code/log/chat; delete `.dev.vars` after local tests.
 - Final UI uses real data only (no mocks; prototype alone may fake). Commits: short imperative English. `main` is the only prod branch.
-- Target tree: `astro.config.mjs` `tsconfig.json` `src/layouts/Main.astro` `src/pages/index.astro+chat.astro+ocr.astro+tts.astro+settings.astro` `src/components/Hero.astro` `src/islands/chat.ts+models.ts+ocr.ts+tts.ts+settings.ts` `src/api/client.ts+types.ts` `src/styles/theme.css` `public/_headers`. `.gitignore`: `node_modules/ dist/ .env .opencode/skills/ *.har test-results/ playwright-report/`.
+- Target tree: `astro.config.mjs` `tsconfig.json` `playwright.config.ts` `tests/*.spec.ts+helpers.ts` `src/layouts/Main.astro` `src/pages/index.astro+chat.astro+settings.astro` `src/components/Hero.astro` `src/islands/chat.ts+models.ts+settings.ts` `src/api/client.ts+types.ts` `src/styles/theme.css` `public/_headers`. `.gitignore`: `node_modules/ dist/ .env .opencode/skills/ *.har test-results/ playwright-report/`.
 
 ## Sessions (one line per session)
 
@@ -70,3 +70,4 @@ Arabic RTL frontend for `free-ai-gateway`. Contract source of truth: `GATEWAY_AP
 | 2026-10-11 | chat rebuilt as app-like LTR layout per user spec (header/sidebar/suggestions/sticky bar; mic = real Web Speech dictation, hidden if unsupported; suggestion taps send as messages) + live 390 pass | watch easemate recovery → unhide; optional dashboard auto-deploy |
 | 2026-10-11 | identity pinned (`IDENTITY_PROMPT` — model claimed Claude) + session memory (last 20 user/assistant turns, busy-guard, cleared on new-chat; live-verified: recalled 42, answers as Pineapple) | watch easemate recovery → unhide; optional dashboard auto-deploy |
 | 2026-10-11 | model pill in header (live name, opens sidebar) + saved chats in `pineapple:chats` (upsert on answer, load/delete from sidebar; live-verified: mid-chat switch Qwen→Mistral kept memory, archive/load/delete cycle) | watch easemate recovery → unhide; optional dashboard auto-deploy |
+| 2026-10-11 | committed E2E suite `tests/` (15 tests, green locally + on `pages.dev`; fixed 2 test-bugs: settings blur-save, sidebar-offscreen clicks) + gateway matrix re-run (all green; easemate still 200-empty ×11 → stays hidden) | watch easemate recovery → unhide; optional dashboard auto-deploy |
