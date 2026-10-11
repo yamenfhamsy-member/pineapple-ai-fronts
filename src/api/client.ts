@@ -149,18 +149,3 @@ export async function chatStream(
   if (buf.trim().length > 0) handleLine(buf);
   return full;
 }
-
-export async function textToSpeech(input: string, format?: "json"): Promise<Blob | { audio_url: string }> {
-  const base = getBase();
-  const res = await fetch(`${base}/v1/audio/speech`, {
-    method: "POST",
-    headers: headers(true),
-    body: JSON.stringify(format === "json" ? { input, format: "json" } : { input }),
-  });
-  logCall("freeai", "tts", res.status);
-  if (!res.ok) {
-    throw { status: res.status, code: "upstream_error", message: "tts failed", userMessage: ERR_STRINGS.upstream502 } as GatewayErrorShape;
-  }
-  if (format === "json") return (await res.json()) as { audio_url: string };
-  return await res.blob();
-}

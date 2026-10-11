@@ -8,7 +8,7 @@ interface Props {
   title?: string;
   subtitle?: string;
 }
-const { title = "Pineapple AI", subtitle = "مساعد عربي سريع — محادثة وصوت وصور" } = Astro.props as Props;
+const { title = "Pineapple AI", subtitle = "مساعد عربي سريع — محادثة فورية" } = Astro.props as Props;
 ---
 
 <section class="hero" aria-labelledby="hero-title">
@@ -26,9 +26,8 @@ const { title = "Pineapple AI", subtitle = "مساعد عربي سريع — م�
     <h1 id="hero-title" class="hero-title">{title}</h1>
     <p class="hero-sub">{subtitle}</p>
     <ul class="hero-points">
-      <li>محادثة فورية مع 6 مزودات</li>
-      <li>تحويل النص إلى صوت</li>
-      <li>استخراج النص من الصور</li>
+      <li>محادثة فورية مع بث الرد</li>
+      <li>نماذج حية وإيقاف التوليد</li>
     </ul>
     <a class="btn-brand hero-cta" href="/chat">ابدأ المحادثة</a>
   </div>

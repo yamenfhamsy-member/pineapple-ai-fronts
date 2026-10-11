@@ -142,9 +142,6 @@ label { display: block; margin-block: 0.5rem 0.25rem; font-weight: 600; }
 :where(select, textarea, input:not([type="checkbox"])) {
   min-block-size: 44px;
 }
-#tts-audio { inline-size: 100%; margin-block-start: 0.5rem; }
-#ocr-out, #tts-out { margin-block-start: 0.75rem; }
-
 /* Reduced motion kills non-essential motion. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
