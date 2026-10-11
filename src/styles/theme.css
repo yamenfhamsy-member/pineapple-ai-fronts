@@ -1,0 +1,97 @@
+/*
+  Pineapple AI — X */
+@import "tailwindcss";
+
+:root {
+  --brand: #EEA215; /* buttons, black text on it — 7.1:1 black on brand */
+  --brand-light: #F5C81A;
+  --leaf: #348937; /* large text / headings only — 4.4 on white */
+  --ink: #1C1E22; /* 15.9:1 on white */
+  --muted: #5A5C60; /* 7.0:1 on white */
+  --cream: #EFE0A8;
+  --bg: #FAFAFA;
+  --surface: #FFFFFF;
+  --danger: #B3261E;
+  --focus: #1C1E22;
+  --radius: 0.75rem;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141414;
+    --surface: #1C1E22;
+    --ink: #FAFAFA; /* 15.9:1 on surface */
+    --muted: #C9C9C9; /* 7.5:1 on surface */
+    --cream: #3A2F10;
+    --focus: #F5C81A;
+  }
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: "IBM Plex Sans Arabic", "Tajawal", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  margin: 0;
+  min-block-size: 100dvh;
+  overflow-x: clip;
+  text-align: start;
+}
+
+/* Logical properties only — no physical left/right. */
+.wrap {
+  max-inline-size: 72rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+/* Buttons: brand bg always pairs with black text (AA). */
+.btn-brand {
+  background: var(--brand);
+  color: #000;
+  border: 0;
+  border-radius: var(--radius);
+  padding-inline: 1.25rem;
+  padding-block: 0.75rem;
+  font-weight: 700;
+  min-block-size: 44px;
+}
+.btn-brand:hover {
+  background: var(--brand-light);
+}
+.btn-brand:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Visible focus everywhere. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Headings in leaf — large text only per token rule. */
+h1, h2.hero-title {
+  color: var(--leaf);
+}
+
+/* Numbers / code / links stay LTR inside RTL. */
+:where(.ltr, code, pre, a[href^="http"]) {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Reduced motion kills non-essential motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

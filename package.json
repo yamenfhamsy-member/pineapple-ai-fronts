@@ -1,0 +1,27 @@
+{
+  "name": "pineapple-ai-fronts",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.8",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@playwright/test": "^1.64.0",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": "24.21.0",
+    "npm": ">=10"
+  }
+}

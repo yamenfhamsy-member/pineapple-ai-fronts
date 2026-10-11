@@ -1,0 +1,72 @@
+---
+import { Image } from "astro:assets";
+import heroImg from "../../public/pineapple.jpg";
+
+// ZERO-JS hero: static HTML only. No <script>, no client:* directive.
+// Justification for any future JS here would be required in writing — none now.
+interface Props {
+  title?: string;
+  subtitle?: string;
+}
+const { title = "Pineapple AI", subtitle = "مساعد عربي سريع — محادثة وصوت وصور" } = Astro.props as Props;
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-media">
+    <Image
+      src={heroImg}
+      alt="Pineapple — شعار المساعد"
+      width={640}
+      height={640}
+      loading="eager"
+      fetchpriority="high"
+    />
+  </div>
+  <div class="hero-copy">
+    <h1 id="hero-title" class="hero-title">{title}</h1>
+    <p class="hero-sub">{subtitle}</p>
+    <ul class="hero-points">
+      <li>محادثة فورية مع 6 مزودات</li>
+      <li>تحويل النص إلى صوت</li>
+      <li>استخراج النص من الصور</li>
+    </ul>
+    <a class="btn-brand hero-cta" href="#chat">ابدأ المحادثة</a>
+  </div>
+</section>
+
+<style>
+  .hero {
+    display: grid;
+    gap: 1.5rem;
+    align-items: center;
+    padding-block: 2rem;
+  }
+  @media (min-width: 48rem) {
+    .hero { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  }
+  .hero-media img {
+    inline-size: 100%;
+    max-inline-size: 22rem;
+    block-size: auto;
+    border-radius: 1.25rem;
+    background: var(--cream);
+  }
+  .hero-title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.2;
+    margin: 0 0 0.5rem;
+  }
+  .hero-sub {
+    color: var(--muted);
+    font-size: 1.125rem;
+    margin: 0 0 1rem;
+  }
+  .hero-points {
+    margin: 0 0 1.25rem;
+    padding-inline-start: 1.25rem;
+  }
+  .hero-cta {
+    display: inline-block;
+    text-decoration: none;
+  }
+</style>
