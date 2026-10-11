@@ -1,5 +1,10 @@
 # Pineapple AI — Cloudflare Pages headers.
-# Hashed/static assets cache immutable; HTML + security headers below.
+# Documents are never stored (always fresh HTML/JS); hashed assets cache immutable.
+/*
+  Cache-Control: no-store
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
 /pineapple.jpg
   Cache-Control: public, max-age=31536000, immutable
 /favicon-32.png
@@ -10,7 +15,3 @@
   Cache-Control: public, max-age=31536000, immutable
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
-/
-  X-Frame-Options: DENY
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: no-referrer
