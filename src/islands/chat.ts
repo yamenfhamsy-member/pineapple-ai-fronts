@@ -6,24 +6,18 @@ import { chatStream, generateImage } from "../api/client";
 import { loadStoredModel } from "./models";
 import { loadSettings } from "./settings";
 
-// User asks for an image → the assistant answers with the image tool (no LLM round-trip).
-// NOTE: no \b around Arabic words — \b only sees ASCII \w, so it never
-// matches Arabic boundaries. Use (\s|$) and explicit verbs instead.
-const IMAGE_INTENT: RegExp[] = [
-  /ارسم(\s|$)/, // ارسم [أي شيء] — فعل رسم لا يُقصد به غير الصورة
-  /^(اعمل|أعمل|سوي|سوّي|ارسم|أنشئ|انشئ|إنشئ|اصنع|ولّد|ولد|تخيل|تخيّل|صمّم|صمم|ممكن|عايز|عاوز|بدي|أريد|اريد)[\s\S]{0,40}(صورة|صور|صوره|رسم|لوحة|أيقونة|شعار|غلاف|مشهد|منظر)/,
-  /(تقدر|تستطيع|يمكنك|بإمكانك|ممكن)\s+(أن\s+)?(تعمل|تعملوا|تصنع|تنشئ|ترسم|تولد|تصمم).{0,20}(صور|صورة)/,
-  /صورة\s+(ل|عن|لـ)/,
-  /(imagine|draw|generate|create|make)\b.{0,30}\b(image|picture|photo|painting|drawing)\b/i,
-  /\bdraw\s+me\b/i,
-];
-
-const imageMarker = (src: string): string => `![صورة مولّدة](${src})`;
-
-const parseImageMarker = (text: string): string | null => {
-  const m = /^!\[.*\]\((https?:\/\/\S+|data:image\/\w+;base64,[A-Za-z0-9+/=]+)\)$/.exec(text.trim());
-  return m?.[1] ?? null;
+// Image markers (assistant turns holding a generated picture) must never be sent
+// back to the LLM raw — b64 payloads would vaporize quotas. Send a short note.
+const parseMarker = (text: string): { alt: string; src: string } | null => {
+  const m = /^!\[(.*)\]\((https?:\/\/\S+|data:image\/\w+;base64,[A-Za-z0-9+/=]+)\)$/.exec(text.trim());
+  return m?.[1] !== undefined && m?.[2] ? { alt: m[1], src: m[2] } : null;
 };
+
+const sanitizeForLlm = (msgs: ChatMessage[]): ChatMessage[] =>
+  msgs.map((m) => {
+    const p = parseMarker(m.content);
+    return p ? { ...m, content: `[صورة مولّدة سابقاً: ${p.alt}]` } : m;
+  });
 
 // Model-emitted tool call: [[tool:generate_image]]{"prompt": "..."}.
 // Tolerant: the call may sit inside surrounding chatter (models rarely obey
@@ -183,9 +177,9 @@ export function initChat(): void {
     log.innerHTML = "";
     for (const m of history) {
       if (m.role === "assistant") {
-        const url = parseImageMarker(m.content);
-        if (url) {
-          imageBox(url);
+        const parsed = parseMarker(m.content);
+        if (parsed) {
+          imageBox(parsed.src);
           continue;
         }
       }
@@ -292,15 +286,13 @@ export function initChat(): void {
     log.appendChild(div);
   };
 
-  // Image tool path: generate via the gateway horde provider, answer with the picture.
-  // b64 is stored so saved chats keep working (R2 URLs expire after ~30 min).
+  // Image tool path: the MODEL asked for it — generate, show, then let the
+  // model close the turn with one short line (genuine tool-use loop).
   let cancelImage: (() => void) | null = null;
-  const runImage = (text: string, imagePrompt?: string, bubbled = false): void => {
+  const runImage = (userText: string, imagePrompt: string): void => {
     ctrl = new AbortController();
     setBusy(true);
-    if (!bubbled) bubble("user", text);
     const box = imageBox(null);
-    input.value = "";
     const signal = ctrl.signal;
     let settled = false;
     cancelImage = () => {
@@ -310,16 +302,16 @@ export function initChat(): void {
       cancelImage = null;
       setBusy(false);
     };
-    void generateImage(imagePrompt ?? text, "512x512", "b64_json", signal)
+    void generateImage(imagePrompt, "512x512", "b64_json", signal)
       .then(({ url, b64 }) => {
         if (settled) return;
         settled = true;
         cancelImage = null;
-        setBusy(false);
         const src = b64 ? `data:image/webp;base64,${b64}` : (url ?? "");
         if (!src) {
+          setBusy(false);
           box.remove();
-          errLine(ERR_STRINGS.empty200, () => run(text));
+          errLine(ERR_STRINGS.empty200, () => run(userText));
           return;
         }
         const img = document.createElement("img");
@@ -327,10 +319,55 @@ export function initChat(): void {
         img.alt = "صورة مولّدة";
         img.loading = "lazy";
         box.replaceChildren(img);
-        history.push({ role: "user", content: text });
-        history.push({ role: "assistant", content: imageMarker(src) });
+        history.push({ role: "user", content: userText });
+        history.push({ role: "assistant", content: `![صورة مولّدة: ${imagePrompt.slice(0, 120)}](${src})` });
         if (history.length > HISTORY_LIMIT) history.splice(0, history.length - HISTORY_LIMIT);
         upsertCurrent();
+        // Closing turn: feed the tool result back so the model answers briefly.
+        const stored = loadStoredModel();
+        const settings = loadSettings();
+        const followCtrl = new AbortController();
+        ctrl = followCtrl;
+        const closeBox = bubble("assistant", "…");
+        const closeText = closeBox.querySelector("p");
+        const toolNote: ChatMessage = {
+          role: "user",
+          content: `[نتيجة الأداة generate_image] تم توليد الصورة (${imagePrompt}) وعرضها للمستخدم. أخبره بجملة واحدة قصيرة.`,
+        };
+        const followReq = {
+          model: stored.model,
+          provider: stored.provider,
+          messages: [...sanitizeForLlm(history).slice(-HISTORY_LIMIT), toolNote],
+          temperature: settings.temperature,
+          system_prompt: [IDENTITY_PROMPT, TOOL_PROMPT, settings.system_prompt].filter((s) => s.trim().length > 0).join("\n"),
+        };
+        void chatStream(
+          followReq,
+          (delta) => {
+            if (closeText) closeText.textContent = (closeText.textContent === "…" ? "" : closeText.textContent ?? "") + delta;
+          },
+          followCtrl.signal,
+        ).then(
+          (closing) => {
+            setBusy(false);
+            if (!closing || closing.trim().length === 0 || parseToolCall(closing)) {
+              closeBox.remove();
+            } else {
+              if (closeText) closeText.textContent = closing;
+              history.push(toolNote, { role: "assistant", content: closing });
+              if (history.length > HISTORY_LIMIT) history.splice(0, history.length - HISTORY_LIMIT);
+              upsertCurrent();
+              attachActions(closeBox, closing);
+            }
+          },
+          (e: unknown) => {
+            setBusy(false);
+            closeBox.remove();
+            const g = e as GatewayErrorShape & { name?: string };
+            if (g?.code === "aborted" || g?.name === "AbortError") return;
+            errLine(g?.userMessage || ERR_STRINGS.upstream502, null);
+          },
+        );
       })
       .catch((e: unknown) => {
         if (settled) return;
@@ -340,7 +377,7 @@ export function initChat(): void {
         box.remove();
         const g = e as GatewayErrorShape & { name?: string };
         if (g?.code === "aborted" || g?.name === "AbortError") return;
-        errLine(g?.userMessage || ERR_STRINGS.upstream502, g?.status === 429 || g?.status === 502 ? () => run(text) : null);
+        errLine(g?.userMessage || ERR_STRINGS.upstream502, g?.status === 429 || g?.status === 502 ? () => run(userText) : null);
       });
   };
 
@@ -432,10 +469,6 @@ export function initChat(): void {
       errLine(ERR_STRINGS.empty400, null);
       return;
     }
-    if (IMAGE_INTENT.some((re) => re.test(text))) {
-      runImage(text);
-      return;
-    }
       const stored = loadStoredModel();
       const settings = loadSettings();
       ctrl = new AbortController();
@@ -448,7 +481,7 @@ export function initChat(): void {
       const req = {
         model: stored.model,
         provider: stored.provider,
-        messages: [...history, { role: "user" as const, content: text }].slice(-HISTORY_LIMIT),
+        messages: sanitizeForLlm([...history, { role: "user" as const, content: text }]).slice(-HISTORY_LIMIT),
         temperature: settings.temperature,
         system_prompt: [IDENTITY_PROMPT, TOOL_PROMPT, settings.system_prompt].filter((s) => s.trim().length > 0).join("\n"),
       };
@@ -466,7 +499,7 @@ export function initChat(): void {
         const toolPrompt = parseToolCall(full);
         if (toolPrompt) {
           aiBox.remove();
-          runImage(text, toolPrompt, true);
+          runImage(text, toolPrompt);
           return;
         }
         history.push({ role: "user", content: text });

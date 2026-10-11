@@ -86,9 +86,9 @@ export const IDENTITY_PROMPT =
   "أنت Pineapple AI، مساعد ذكي يتكلم العربية. عرّف عن نفسك دائماً باسم Pineapple AI فقط، ولا تدّعِ أبداً أنك نموذج أو منتج آخر.";
 
 // Tool-use contract — lets the MODEL decide to call the image tool.
-// The client executes the call and never shows the raw tool-call line.
+// The client executes the call, feeds the result back, and hides the raw call line.
 export const TOOL_PROMPT =
-  "مهم جداً: أنت قادر على توليد الصور عبر أداة داخلية، فلا ترفض أبداً أي طلب صورة ولا تقترح أدوات خارجية (مثل DALL-E أو Midjourney). عندما يطلب منك المستخدم صورة بأي صياغة، أجب بسطر واحد فقط بهذا الشكل تماماً ولا شيء غيره: [[tool:generate_image]]{\"prompt\": \"وصف الصورة بالإنجليزية\"}. لا تشرح ولا تعتذر ولا تضف أي نص آخر — فقط سطر الأداة.";
+  "أنت تستخدم أدوات حقيقية. عندما يطلب منك المستخدم صورة بأي صياغة، لا تجب بنص عادي ولا ترفض أبداً ولا تقترح أدوات خارجية (مثل DALL-E أو Midjourney) — أجب بسطر واحد فقط بهذا الشكل تماماً ولا شيء غيره: [[tool:generate_image]]{\"prompt\": \"وصف الصورة بالإنجليزية\"}. بعد التنفيذ سأرسل لك نتيجة الأداة، فترد على المستخدم بجملة واحدة قصيرة.";
 
 export const DEFAULT_SETTINGS: StoredSettings = {
   temperature: 0.7,
