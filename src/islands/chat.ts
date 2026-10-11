@@ -20,6 +20,7 @@ export function initChat(): void {
 
   const setBusy = (busy: boolean): void => {
     send.disabled = busy;
+    send.hidden = busy;
     send.setAttribute("aria-disabled", String(busy));
     if (stop) stop.hidden = !busy;
   };
@@ -55,8 +56,13 @@ export function initChat(): void {
 
   stop?.addEventListener("click", () => ctrl?.abort());
 
-  // Top-bar extras: new chat clears the log, plus toggles a menu of real actions.
-  const menu = document.getElementById("plus-menu") as HTMLElement | null;
+  // Sidebar drawer (models + settings live here now, off the main screen).
+  const sidebar = document.getElementById("sidebar") as HTMLElement | null;
+  const backdrop = document.getElementById("side-backdrop") as HTMLElement | null;
+  const setSide = (open: boolean): void => {
+    sidebar?.classList.toggle("open", open);
+    if (backdrop) backdrop.hidden = !open;
+  };
   const clearLog = (): void => {
     if (log) log.innerHTML = "";
     history.length = 0;
@@ -65,17 +71,26 @@ export function initChat(): void {
     clearLog();
     input.focus();
   });
-  document.getElementById("chat-plus")?.addEventListener("click", () => {
-    if (menu) menu.hidden = !menu.hidden;
+  document.getElementById("menu-btn")?.addEventListener("click", () => setSide(true));
+  document.getElementById("chat-plus")?.addEventListener("click", () => setSide(true));
+  document.getElementById("side-close")?.addEventListener("click", () => setSide(false));
+  backdrop?.addEventListener("click", () => setSide(false));
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") setSide(false);
   });
-  document.getElementById("plus-new")?.addEventListener("click", () => {
-    clearLog();
-    if (menu) menu.hidden = true;
-    input.focus();
-  });
-  document.getElementById("plus-model")?.addEventListener("click", () => {
-    if (menu) menu.hidden = true;
-    document.getElementById("model-select")?.focus();
+
+  // Empty-state suggestions: shown only while the log is empty; tapping one sends it.
+  const empty = document.getElementById("chat-empty") as HTMLElement | null;
+  const syncEmpty = (): void => {
+    if (empty) empty.hidden = log.children.length > 0;
+  };
+  new MutationObserver(syncEmpty).observe(log, { childList: true });
+  syncEmpty();
+  empty?.querySelectorAll<HTMLButtonElement>("button[data-text]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      input.value = btn.getAttribute("data-text") ?? "";
+      form.requestSubmit();
+    });
   });
 
   // Voice input via Web Speech API (real dictation into the input).

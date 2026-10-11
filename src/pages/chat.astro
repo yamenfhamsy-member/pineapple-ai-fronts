@@ -3,67 +3,45 @@ import Main from "../layouts/Main.astro";
 ---
 
 <Main title="المحادثة" description="Pineapple AI — محادثة فورية مع نماذج حية.">
-  <section id="models" aria-labelledby="models-h">
-    <h2 id="models-h">النموذج</h2>
-    <label for="model-select">اختر النموذج</label>
-    <select id="model-select" aria-describedby="model-status"></select>
-    <p id="model-status" role="status"></p>
-  </section>
-
-  <section id="chat" aria-labelledby="chat-h">
+  <section id="chat" class="chat-app" aria-labelledby="chat-h">
     <h2 id="chat-h" class="sr-only">المحادثة</h2>
-    <div class="top-bar">
-      <a class="icon-btn" href="/" aria-label="القائمة الرئيسية">
+
+    <div class="top-bar" dir="ltr">
+      <button id="menu-btn" class="icon-btn" type="button" aria-label="فتح القائمة">
         <span class="lines" aria-hidden="true"><span></span><span></span></span>
-      </a>
-      <span class="name-pill" aria-hidden="true">✦ Pineapple AI</span>
-      <button id="chat-new" class="icon-btn" type="button" aria-label="محادثة جديدة">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M10.1 2.182a10 10 0 0 1 3.8 0" />
-          <path d="M13.9 21.818a10 10 0 0 1-3.8 0" />
-          <path d="M17.609 3.72a10 10 0 0 1 2.69 2.7" />
-          <path d="M2.182 13.9a10 10 0 0 1 0-3.8" />
-          <path d="M20.28 17.61a10 10 0 0 1-2.7 2.69" />
-          <path d="M21.818 10.1a10 10 0 0 1 0 3.8" />
-          <path d="M3.721 6.391a10 10 0 0 1 2.7-2.69" />
-          <path d="m6.163 21.117-2.906.85a1 1 0 0 1-1.236-1.169l.965-2.98" />
-        </svg>
       </button>
+      <strong class="app-name">Pineapple AI</strong>
+      <button id="chat-new" class="new-pill" type="button">✦ جديد</button>
     </div>
 
-    <div id="chat-log" class="chat-area" aria-live="polite" aria-label="سجل المحادثة"></div>
-
-    <div id="plus-menu" class="plus-menu">
-      <button id="plus-new" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-        </svg>
-        محادثة جديدة
-      </button>
-      <button id="plus-model" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="4" y1="21" x2="4" y2="14" />
-          <line x1="4" y1="10" x2="4" y2="3" />
-          <line x1="12" y1="21" x2="12" y2="12" />
-          <line x1="12" y1="8" x2="12" y2="3" />
-          <line x1="20" y1="21" x2="20" y2="16" />
-          <line x1="20" y1="12" x2="20" y2="3" />
-          <line x1="1" y1="14" x2="7" y2="14" />
-          <line x1="9" y1="8" x2="15" y2="8" />
-          <line x1="17" y1="16" x2="23" y2="16" />
-        </svg>
-        تغيير النموذج
-      </button>
-      <a id="plus-settings" class="menu-link" href="/settings">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-        </svg>
-        الإعدادات
-      </a>
+    <div id="chat-main" class="chat-main" dir="ltr">
+      <div id="chat-log" aria-live="polite" aria-label="سجل المحادثة"></div>
+      <div id="chat-empty" class="empty">
+        <button type="button" data-text="أنشئ صورة">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+            <circle cx="9" cy="9" r="2" />
+            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+          </svg>
+          إنشاء صورة
+        </button>
+        <button type="button" data-text="ساعدني في الكتابة أو التعديل">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+          </svg>
+          كتابة أو تعديل
+        </button>
+        <button type="button" data-text="ابحث لي عن شيء">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          البحث عن شيء
+        </button>
+      </div>
     </div>
 
-    <form id="chat-form" class="input-area">
+    <form id="chat-form" class="input-area" dir="ltr">
       <label class="sr-only" for="chat-input">رسالتك</label>
       <button id="chat-plus" class="icon-btn" type="button" aria-label="خيارات إضافية">+</button>
       <input id="chat-input" class="pill" type="text" placeholder="اسأل Pineapple" autocomplete="off" aria-label="رسالتك" />
@@ -82,6 +60,16 @@ import Main from "../layouts/Main.astro";
         </svg>
       </button>
     </form>
+
+    <div id="side-backdrop" class="backdrop" hidden></div>
+    <aside id="sidebar" class="sidebar" aria-label="القائمة الجانبية">
+      <button id="side-close" class="icon-btn" type="button" aria-label="إغلاق القائمة">×</button>
+      <h3>النموذج</h3>
+      <label for="model-select">اختر النموذج</label>
+      <select id="model-select" aria-describedby="model-status"></select>
+      <p id="model-status" role="status"></p>
+      <a class="menu-link" href="/settings">الإعدادات</a>
+    </aside>
   </section>
 </Main>
 
@@ -93,17 +81,37 @@ import Main from "../layouts/Main.astro";
 </script>
 
 <style>
-  /* Flat chat card (clone shape) — model picker above keeps its card. */
+  /* App-like column: sticky header, growing scroll area, sticky input bar. */
   #chat {
     background: transparent;
     border: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-block-size: 100dvh;
   }
   .top-bar {
-    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 0.5rem;
     min-block-size: 60px;
+  }
+  .app-name { text-align: center; font-size: 1.05rem; }
+  .new-pill {
+    border: 1px solid color-mix(in srgb, var(--muted) 45%, transparent);
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem;
+    font: inherit;
+    font-weight: 700;
+    min-block-size: 44px;
+    cursor: pointer;
   }
   .icon-btn {
     inline-size: 44px;
@@ -121,7 +129,6 @@ import Main from "../layouts/Main.astro";
     text-decoration: none;
     cursor: pointer;
   }
-  /* Thin two-line menu glyph (clone shape), smaller than ☰. */
   .lines {
     display: flex;
     flex-direction: column;
@@ -135,30 +142,37 @@ import Main from "../layouts/Main.astro";
     border-radius: 2px;
   }
   .lines span:nth-child(2) { inline-size: 70%; }
-  .name-pill {
-    border: 1px solid color-mix(in srgb, var(--muted) 45%, transparent);
-    border-radius: 999px;
-    padding: 0.55rem 1rem;
-    font-weight: 700;
-    margin-inline-start: 0.25rem;
+  .chat-main {
+    flex: 1;
+    overflow-y: auto;
+    padding-block: 0.5rem;
   }
-  #chat-new { margin-inline-start: auto; }
-  .chat-area {
-    min-block-size: 16rem;
+  /* The scroll lives on .chat-main now — the log itself is a flat flow. */
+  #chat-log {
+    min-block-size: 0;
+    max-block-size: none;
+    overflow: visible;
+    border: 0;
+    padding: 0;
+    margin: 0;
   }
-  .plus-menu {
+  /* LTR user bubble on the right (clone shape). */
+  #chat-log .msg-user p {
+    margin-inline-start: 0;
+    margin-inline-end: auto;
+  }
+  .empty {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin-block: 0.5rem;
     margin-inline-start: 0.5rem;
+    padding-block: 1rem;
   }
-  .plus-menu[hidden] { display: none; }
-  .plus-menu button, .menu-link {
+  .empty[hidden] { display: none; }
+  .empty button {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    text-align: start;
     background: none;
     color: var(--ink);
     border: 0;
@@ -167,13 +181,18 @@ import Main from "../layouts/Main.astro";
     font-size: 1rem;
     min-block-size: 44px;
     cursor: pointer;
-    text-decoration: none;
+    text-align: start;
   }
   .input-area {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: var(--bg);
     display: flex;
     align-items: center;
     gap: 0.5rem;
     min-block-size: 60px;
+    padding-block: 0.25rem;
   }
   .pill {
     flex: 1;
@@ -189,4 +208,33 @@ import Main from "../layouts/Main.astro";
   }
   .send:disabled { opacity: 0.55; cursor: not-allowed; }
   .stop { border-color: var(--danger, #B3261E); color: var(--danger, #B3261E); }
+  /* Sidebar drawer from the left (clone shape). */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 40;
+  }
+  .backdrop[hidden] { display: none; }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    inline-size: min(18rem, 85vw);
+    background: var(--surface);
+    z-index: 50;
+    overflow-y: auto;
+    padding: 1rem;
+    box-shadow: 0 0 2rem rgba(0, 0, 0, 0.25);
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+  }
+  .sidebar.open { transform: none; }
+  .sidebar .menu-link {
+    display: flex;
+    align-items: center;
+    min-block-size: 44px;
+    margin-block-start: 0.5rem;
+  }
 </style>
