@@ -8,8 +8,9 @@ test("image page validates empty prompt", async ({ page }) => {
 });
 
 test("chat image intent answers with a picture", { timeout: 420000 }, async ({ page }) => {
+  test.setTimeout(420000);
   await gotoFresh(page, "/chat");
-  await page.locator("#chat-input").fill("ارسم قطة صغيرة");
+  await page.locator("#chat-input").fill("اعمل صورة قطة صغيرة");
   await page.locator("#chat-send").click();
   await expect(page.locator("#chat-log .msg-image img")).toBeVisible({ timeout: 400000 });
   const src = await page.evaluate(() => (document.querySelector("#chat-log .msg-image img") as HTMLImageElement).src);
@@ -42,6 +43,7 @@ test("model-decided tool call executes the image tool", { timeout: 480000 }, asy
 });
 
 test("image page generates a real image", { timeout: 420000 }, async ({ page }) => {
+  test.setTimeout(420000);
   await gotoFresh(page, "/image");
   await page.locator("#image-prompt").fill("a red apple on a table");
   await page.locator("#image-send").click();

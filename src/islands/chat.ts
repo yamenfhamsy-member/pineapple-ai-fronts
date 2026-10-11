@@ -8,10 +8,11 @@ import { loadSettings } from "./settings";
 
 // User asks for an image → the assistant answers with the image tool (no LLM round-trip).
 // NOTE: no \b around Arabic words — \b only sees ASCII \w, so it never
-// matches Arabic boundaries. Use (\s|$) instead.
+// matches Arabic boundaries. Use (\s|$) and explicit verbs instead.
 const IMAGE_INTENT: RegExp[] = [
   /ارسم(\s|$)/, // ارسم [أي شيء] — فعل رسم لا يُقصد به غير الصورة
-  /(أنشئ|انشئ|إنشئ|اصنع|ولّد|ولد|تخيل|تخيّل|صمّم|صمم)\s+(صورة|صور|رسم|لوحة|أيقونة|شعار|غلاف|مشهد|منظر)/,
+  /^(اعمل|أعمل|سوي|سوّي|ارسم|أنشئ|انشئ|إنشئ|اصنع|ولّد|ولد|تخيل|تخيّل|صمّم|صمم|ممكن|عايز|عاوز|بدي|أريد|اريد)[\s\S]{0,40}(صورة|صور|صوره|رسم|لوحة|أيقونة|شعار|غلاف|مشهد|منظر)/,
+  /(تقدر|تستطيع|يمكنك|بإمكانك|ممكن)\s+(أن\s+)?(تعمل|تعملوا|تصنع|تنشئ|ترسم|تولد|تصمم).{0,20}(صور|صورة)/,
   /صورة\s+(ل|عن|لـ)/,
   /(imagine|draw|generate|create|make)\b.{0,30}\b(image|picture|photo|painting|drawing)\b/i,
   /\bdraw\s+me\b/i,
