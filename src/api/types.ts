@@ -14,6 +14,9 @@ export interface ChatMessage {
   content: string;
 }
 
+// Max conversation turns sent per request (bounds token usage).
+export const HISTORY_LIMIT = 20;
+
 export interface ChatRequest {
   model: string;
   messages: ChatMessage[];

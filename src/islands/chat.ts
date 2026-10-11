@@ -1,7 +1,7 @@
 // Chat island — vanilla TS, no framework. Always streams (SSE) with abort.
 // Error mapping: literal Arabic strings from types. 200-empty = retry hint (known flake).
 // 429 quota_exhausted = offer provider switch, not fatal.
-import { ERR_STRINGS, IDENTITY_PROMPT, type GatewayErrorShape } from "../api/types";
+import { ERR_STRINGS, HISTORY_LIMIT, IDENTITY_PROMPT, type ChatMessage, type GatewayErrorShape } from "../api/types";
 import { chatStream } from "../api/client";
 import { loadStoredModel } from "./models";
 import { loadSettings } from "./settings";
@@ -15,6 +15,8 @@ export function initChat(): void {
   if (!form || !input || !log || !send) return;
 
   let ctrl: AbortController | null = null;
+  // Session memory: user/assistant turns sent with every request (cap keeps tokens bounded).
+  const history: ChatMessage[] = [];
 
   const setBusy = (busy: boolean): void => {
     send.disabled = busy;
@@ -57,6 +59,7 @@ export function initChat(): void {
   const menu = document.getElementById("plus-menu") as HTMLElement | null;
   const clearLog = (): void => {
     if (log) log.innerHTML = "";
+    history.length = 0;
   };
   document.getElementById("chat-new")?.addEventListener("click", () => {
     clearLog();
@@ -79,6 +82,7 @@ export function initChat(): void {
     ev.preventDefault();
     const text = input.value.trim();
     const run = (): void => {
+      if (send.disabled) return;
       if (!navigator.onLine) {
         errLine(ERR_STRINGS.offline, null);
         return;
@@ -99,7 +103,7 @@ export function initChat(): void {
       const req = {
         model: stored.model,
         provider: stored.provider,
-        messages: [{ role: "user" as const, content: text }],
+        messages: [...history, { role: "user" as const, content: text }].slice(-HISTORY_LIMIT),
         temperature: settings.temperature,
         system_prompt: [IDENTITY_PROMPT, settings.system_prompt].filter((s) => s.trim().length > 0).join("\n"),
       };
@@ -112,6 +116,9 @@ export function initChat(): void {
           errLine(`${ERR_STRINGS.empty200} (إعادة المحاولة قد تنجح.)`, run);
           return;
         }
+        history.push({ role: "user", content: text });
+        history.push({ role: "assistant", content: full });
+        if (history.length > HISTORY_LIMIT) history.splice(0, history.length - HISTORY_LIMIT);
         if (aiText) aiText.textContent = full;
       };
       const fail = (e: unknown): void => {
