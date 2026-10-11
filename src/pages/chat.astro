@@ -10,7 +10,7 @@ import Main from "../layouts/Main.astro";
       <button id="menu-btn" class="icon-btn" type="button" aria-label="فتح القائمة">
         <span class="lines" aria-hidden="true"><span></span><span></span></span>
       </button>
-      <strong class="app-name">Pineapple AI</strong>
+      <button id="model-pill" class="app-name" type="button" aria-label="النموذج الحالي — اضغط للتغيير">Pineapple AI</button>
       <button id="chat-new" class="new-pill" type="button">✦ جديد</button>
     </div>
 
@@ -64,6 +64,8 @@ import Main from "../layouts/Main.astro";
     <div id="side-backdrop" class="backdrop" hidden></div>
     <aside id="sidebar" class="sidebar" aria-label="القائمة الجانبية">
       <button id="side-close" class="icon-btn" type="button" aria-label="إغلاق القائمة">×</button>
+      <h3>المحادثات</h3>
+      <div id="chat-history" class="history" role="list"></div>
       <h3>النموذج</h3>
       <label for="model-select">اختر النموذج</label>
       <select id="model-select" aria-describedby="model-status"></select>
@@ -101,7 +103,17 @@ import Main from "../layouts/Main.astro";
     gap: 0.5rem;
     min-block-size: 60px;
   }
-  .app-name { text-align: center; font-size: 1.05rem; }
+  .app-name {
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 700;
+    background: none;
+    border: 0;
+    color: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    min-block-size: 44px;
+  }
   .new-pill {
     border: 1px solid color-mix(in srgb, var(--muted) 45%, transparent);
     background: var(--surface);
@@ -237,4 +249,35 @@ import Main from "../layouts/Main.astro";
     min-block-size: 44px;
     margin-block-start: 0.5rem;
   }
+  .history { display: flex; flex-direction: column; gap: 0.25rem; }
+  .history-row { display: flex; align-items: center; gap: 0.25rem; }
+  .history-open {
+    flex: 1;
+    min-inline-size: 0;
+    text-align: start;
+    background: none;
+    border: 0;
+    color: var(--ink);
+    font: inherit;
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.5rem;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-block-size: 44px;
+  }
+  .history-open small { display: block; color: var(--muted); font-size: 0.8rem; }
+  .history-del {
+    flex: none;
+    inline-size: 44px;
+    block-size: 44px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--muted) 45%, transparent);
+    background: none;
+    color: var(--muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .history-empty { color: var(--muted); font-size: 0.9rem; }
 </style>

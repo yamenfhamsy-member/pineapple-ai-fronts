@@ -22,8 +22,20 @@ export function loadStoredModel(): { provider: string; model: string; display: s
   return { ...DEFAULT_MODEL };
 }
 
-function providerOf(entry: { id: string; owned_by: string }): string {
-  if (entry.id === "gpt-ocr") return "darkps";
+// Broadcasts the selected display name (chat header pill listens).
+function announceModel(): void {
+  let display = DEFAULT_MODEL.display;
+  try {
+    const sel = document.getElementById(SELECT_ID) as HTMLSelectElement | null;
+    const v = sel ? (JSON.parse(sel.value) as { display?: string }) : null;
+    if (v?.display) display = v.display;
+  } catch {
+    /* keep default */
+  }
+  document.dispatchEvent(new CustomEvent("pineapple:model", { detail: { display } }));
+}
+
+function providerOf(entry: { id: string; owned_by: string }): string {  if (entry.id === "gpt-ocr") return "darkps";
   if (entry.owned_by && entry.owned_by !== "easemate") return entry.owned_by;
   if (entry.id.includes("/")) {
     const head = entry.id.split("/")[0] ?? "";
@@ -68,6 +80,7 @@ export function initModels(): void {
       }
     }
     if (status) status.textContent = `عدد النماذج: ${models.length}`;
+    announceModel();
   };
 
   sel.addEventListener("change", () => {
@@ -76,6 +89,7 @@ export function initModels(): void {
     } catch {
       /* storage full/blocked — ignore */
     }
+    announceModel();
   });
 
   // Warm with stored value first (offline-safe), then refresh live.

@@ -18,6 +18,117 @@ export function initChat(): void {
   // Session memory: user/assistant turns sent with every request (cap keeps tokens bounded).
   const history: ChatMessage[] = [];
 
+  // Saved conversations (localStorage `pineapple:chats`, newest first, capped).
+  interface SavedChat {
+    id: string;
+    title: string;
+    messages: ChatMessage[];
+    updated: number;
+  }
+  const CHATS_KEY = "pineapple:chats";
+  const CHATS_LIMIT = 20;
+  let sessionId: string | null = null;
+  const historyBox = document.getElementById("chat-history") as HTMLElement | null;
+
+  const loadChats = (): SavedChat[] => {
+    try {
+      const raw = localStorage.getItem(CHATS_KEY);
+      const arr = raw ? (JSON.parse(raw) as SavedChat[]) : [];
+      return Array.isArray(arr) ? arr.filter((c) => c && typeof c.id === "string" && Array.isArray(c.messages)) : [];
+    } catch {
+      return [];
+    }
+  };
+  const saveChats = (list: SavedChat[]): void => {
+    try {
+      localStorage.setItem(CHATS_KEY, JSON.stringify(list.slice(0, CHATS_LIMIT)));
+    } catch {
+      /* storage full/blocked — ignore */
+    }
+  };
+  const chatTitle = (msgs: ChatMessage[]): string => {
+    const first = msgs.find((m) => m.role === "user");
+    const t = (first?.content ?? "محادثة").trim().slice(0, 40);
+    return t.length > 0 ? t : "محادثة";
+  };
+  const upsertCurrent = (): void => {
+    if (history.length === 0) return;
+    if (!sessionId) sessionId = `c${Date.now()}`;
+    const rest = loadChats().filter((c) => c.id !== sessionId);
+    rest.unshift({
+      id: sessionId,
+      title: chatTitle(history),
+      messages: history.slice(-HISTORY_LIMIT),
+      updated: Date.now(),
+    });
+    saveChats(rest);
+    renderHistoryList();
+  };
+  const renderHistoryList = (): void => {
+    if (!historyBox) return;
+    historyBox.innerHTML = "";
+    const list = loadChats();
+    if (list.length === 0) {
+      const p = document.createElement("p");
+      p.className = "history-empty";
+      p.textContent = "لا محادثات محفوظة بعد.";
+      historyBox.appendChild(p);
+      return;
+    }
+    for (const c of list) {
+      const row = document.createElement("div");
+      row.className = "history-row";
+      row.setAttribute("role", "listitem");
+      const open = document.createElement("button");
+      open.type = "button";
+      open.className = "history-open";
+      open.setAttribute("aria-label", `افتح المحادثة: ${c.title}`);
+      open.textContent = c.title;
+      const date = document.createElement("small");
+      date.textContent = new Date(c.updated).toLocaleDateString("ar");
+      date.setAttribute("dir", "rtl");
+      open.appendChild(date);
+      open.addEventListener("click", () => {
+        sessionId = c.id;
+        history.length = 0;
+        history.push(...c.messages.slice(-HISTORY_LIMIT));
+        log.innerHTML = "";
+        for (const m of history) bubble(m.role === "user" ? "user" : "assistant", m.content);
+        log.scrollTop = log.scrollHeight;
+        setSide(false);
+      });
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "history-del";
+      del.setAttribute("aria-label", `احذف المحادثة: ${c.title}`);
+      del.textContent = "×";
+      del.addEventListener("click", () => {
+        saveChats(loadChats().filter((x) => x.id !== c.id));
+        if (sessionId === c.id) sessionId = null;
+        renderHistoryList();
+      });
+      row.appendChild(open);
+      row.appendChild(del);
+      historyBox.appendChild(row);
+    }
+  };
+  renderHistoryList();
+
+  // Header pill shows the live model name; tapping it opens the sidebar.
+  const pill = document.getElementById("model-pill") as HTMLButtonElement | null;
+  const paintPill = (display: string): void => {
+    if (pill) pill.textContent = `Pineapple AI · ${display}`;
+  };
+  try {
+    paintPill(loadStoredModel().display);
+  } catch {
+    /* ignore */
+  }
+  document.addEventListener("pineapple:model", (ev) => {
+    paintPill((ev as CustomEvent<{ display: string }>).detail.display);
+  });
+  pill?.addEventListener("click", () => setSide(true));
+
   const setBusy = (busy: boolean): void => {
     send.disabled = busy;
     send.hidden = busy;
@@ -66,6 +177,7 @@ export function initChat(): void {
   const clearLog = (): void => {
     if (log) log.innerHTML = "";
     history.length = 0;
+    sessionId = null;
   };
   document.getElementById("chat-new")?.addEventListener("click", () => {
     clearLog();
@@ -168,6 +280,7 @@ export function initChat(): void {
         history.push({ role: "user", content: text });
         history.push({ role: "assistant", content: full });
         if (history.length > HISTORY_LIMIT) history.splice(0, history.length - HISTORY_LIMIT);
+        upsertCurrent();
         if (aiText) aiText.textContent = full;
       };
       const fail = (e: unknown): void => {
